@@ -72,8 +72,13 @@ class UserController extends Controller
                 "email" => ['required', 'email', 'lowercase'],
                 "password" => ['required']
             ]);
+            
             if (Auth::attempt($credentials)) {
                 $request->session()->regenerate();
+                $user = Auth::user();
+                $token = $user->createToken($user->name . "'s Token")->plainTextToken;
+                session(['api_token' => $token]);
+                
                 return redirect()->intended('/');
             } else {
                 return back()->with('error', 'GAGAL');
@@ -82,6 +87,14 @@ class UserController extends Controller
     }
     public function logout(Request $request)
     {
+        if (session('api_token')) {
+            $user = Auth::user();
+            if ($user) {
+                $user->tokens()->delete();
+            }
+            session()->forget('api_token');
+        }
+        
         Auth::logout();
         $request->session()->invalidate();
         $request->session()->regenerateToken();

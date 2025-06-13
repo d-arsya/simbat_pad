@@ -122,8 +122,8 @@
                     {{--  @endif  --}}
                 </div>
                 <div class="mt-10 flex justify-center">
-                    <!-- Icon Logout -->
-                        <button id="logout" class="bg-gray-300 hover:bg-blue-500 hover:text-white text-gray-700 py-2 px-4 rounded-lg flex items-center justify-center w-full text text-center">
+                    <a href="{{ route('user.logout') }}" 
+                       class="bg-gray-300 hover:bg-red-500 hover:text-white text-gray-700 py-2 px-4 rounded-lg flex items-center justify-center w-full text-center">
                         <svg class="mr-2" width="20px" height="20px" viewBox="0 0 24 24" fill="none"
                             xmlns="http://www.w3.org/2000/svg">
                             <path
@@ -132,7 +132,7 @@
                             <path d="M15 12L2 12M2 12L5.5 9M2 12L5.5 15" stroke="#000000" stroke-width="1.5"
                                 stroke-linecap="round" stroke-linejoin="round" />
                         </svg>
-                        Keluar</button>
+                        Keluar</a>
                 </div>
             </div>
         </div>
@@ -144,32 +144,24 @@
         const modal = document.getElementById('modal');
         modal.classList.toggle('hidden');
     }
-    {{--  const user = JSON.parse(localStorage.getItem('user'));  --}}
-    console.log(user.avatar);
-    {{--  document.getElementById('user-avatar').src = user.avatar;  --}}
-    document.getElementById('user-avatar').src = 'http://localhost:8000/storage/' + user.avatar;
-    document.getElementById('user-avatar-modal').src = 'http://localhost:8000/storage/' + user.avatar;
+
+    const user = {
+        name: '{{ auth()->user()->name }}',
+        email: '{{ auth()->user()->email }}',
+        role: '{{ auth()->user()->role }}',
+        avatar: '{{ auth()->user()->avatar }}'
+    };
+
+    document.getElementById('user-avatar').src = '/storage/' + user.avatar;
+    document.getElementById('user-avatar-modal').src = '/storage/' + user.avatar;
     document.getElementById('sp-name').innerText = user.name;
     document.getElementById('sp-role').innerText = user.role;
     document.getElementById('sp-email').innerText = user.email;
 
     if (user.role === 'super') {
-        document.getElementById('list-masterdata').classList.remove('display-none');
-    }
-
-     document.getElementById('logout').addEventListener('click', async () => {
-        try {
-            await axios.post('http://localhost:8000/api/v1/logout', {}, {
-                headers: {
-                    Authorization: 'Bearer ' + localStorage.getItem('token')
-                }
-            });
-
-            // Hapus token, redirect ke login
-            localStorage.removeItem('token');
-            window.location.href = '/login';
-        } catch (err) {
-            alert('Gagal logout');
+        const masterDataList = document.getElementById('list-masterdata');
+        if (masterDataList) {
+            masterDataList.classList.remove('display-none');
         }
-    });
+    }
 </script>

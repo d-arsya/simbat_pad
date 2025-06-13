@@ -442,82 +442,80 @@ function tampilkanRiwayatTransaksi(dataList) {
     });
 }
 
+document.addEventListener('DOMContentLoaded', function() {
+    const token = window.API_TOKEN;
 
+    // Cek apakah token ada
+    if (token) {
+        console.log('Token :', token);
 
-    const token = localStorage.getItem('token');
+        let Obat_terlaris = null;
+        let penjualan_mingguan = null;
+        let riwayat_transaksi = null;
+        let tagihan_jatuh_tempo = null;
+        let stok_menipis = null;
+        let obat_kedaluwarsa = null;
 
+        const endpoints = [
+            { url: '/api/v1/dashboard/obat', description: 'Obat terlaris', assignTo: 'Obat_terlaris' },
+            { url: '/api/v1/dashboard/penjualan', description: 'Penjualan mingguan', assignTo: 'penjualan_mingguan' },
+            { url: '/api/v1/dashboard/histories', description: 'Riwayat transaksi', assignTo: 'riwayat_transaksi' },
+            { url: '/api/v1/dashboard/due-bills', description: 'Tagihan jatuh tempo', assignTo: 'tagihan_jatuh_tempo' },
+            { url: '/api/v1/dashboard/low-stock', description: 'Peringatan stok menipis', assignTo: 'stok_menipis' },
+            { url: '/api/v1/dashboard/expiring', description: 'Obat akan kedaluwarsa', assignTo: 'obat_kedaluwarsa' },
+        ];
 
-// Cek apakah token ada
-if (token) {
-    console.log('Token dari localStorage:', token);
+        const dataStore = {};
 
-    let Obat_terlaris = null;
-    let penjualan_mingguan = null;
-    let riwayat_transaksi = null;
-    let tagihan_jatuh_tempo = null;
-    let stok_menipis = null;
-    let obat_kedaluwarsa = null;
+        endpoints.forEach(endpoint => {
+            axios.get(`http://localhost:8000${endpoint.url}`, {
+                headers: {
+                    Authorization: `Bearer ${token}`
+                }
+            })
+            .then(response => {
+                console.log(`Data ${endpoint.description}:`, response.data);
+                dataStore[endpoint.assignTo] = response.data;
 
-    const endpoints = [
-        { url: '/api/v1/dashboard/obat', description: 'Obat terlaris', assignTo: 'Obat_terlaris' },
-        { url: '/api/v1/dashboard/penjualan', description: 'Penjualan mingguan', assignTo: 'penjualan_mingguan' },
-        { url: '/api/v1/dashboard/histories', description: 'Riwayat transaksi', assignTo: 'riwayat_transaksi' },
-        { url: '/api/v1/dashboard/due-bills', description: 'Tagihan jatuh tempo', assignTo: 'tagihan_jatuh_tempo' },
-        { url: '/api/v1/dashboard/low-stock', description: 'Peringatan stok menipis', assignTo: 'stok_menipis' },
-        { url: '/api/v1/dashboard/expiring', description: 'Obat akan kedaluwarsa', assignTo: 'obat_kedaluwarsa' },
-    ];
-
-    const dataStore = {};
-
-    endpoints.forEach(endpoint => {
-        axios.get(`http://localhost:8000${endpoint.url}`, {
-            headers: {
-                Authorization: `Bearer ${token}`
-            }
-        })
-        .then(response => {
-            console.log(`Data ${endpoint.description}:`, response.data);
-            dataStore[endpoint.assignTo] = response.data;
-
-            // Jika kamu ingin juga simpan ke variabel luar
-            switch (endpoint.assignTo) {
-                case 'Obat_terlaris':
-                    Obat_terlaris = response.data.data;
-                    buatChartPenjualan(Obat_terlaris);
-                    break;
-                case 'penjualan_mingguan':
-                    const rawData = response.data.data.data;
-                    const chartData = {
-                        labels: Object.keys(rawData),
-                        dataset: Object.values(rawData)      // [0, 0, 0, 0, 0, 0, 0]
-                    };
-                    buatChartObat(chartData);
-                    break;
-                case 'riwayat_transaksi':
-                    riwayat_transaksi = response.data.data.data;
-                    tampilkanRiwayatTransaksi(riwayat_transaksi);
-                    break;
-                case 'tagihan_jatuh_tempo':
-                    tagihan_jatuh_tempo = response.data;
-                    break;
-                case 'stok_menipis':
-                    stok_menipis = response.data;
-                    break;
-                case 'obat_kedaluwarsa':
-                    obat_kedaluwarsa = response.data;
-                    break;
-            }
-            // Kamu bisa pakai dataStore[endpoint.assignTo] juga kalau lebih nyaman
-        })
-        .catch(error => {
-            console.error(`Gagal mengambil ${endpoint.description}:`, error);
+                // Jika kamu ingin juga simpan ke variabel luar
+                switch (endpoint.assignTo) {
+                    case 'Obat_terlaris':
+                        Obat_terlaris = response.data.data;
+                        buatChartPenjualan(Obat_terlaris);
+                        break;
+                    case 'penjualan_mingguan':
+                        const rawData = response.data.data.data;
+                        const chartData = {
+                            labels: Object.keys(rawData),
+                            dataset: Object.values(rawData)      // [0, 0, 0, 0, 0, 0, 0]
+                        };
+                        buatChartObat(chartData);
+                        break;
+                    case 'riwayat_transaksi':
+                        riwayat_transaksi = response.data.data.data;
+                        tampilkanRiwayatTransaksi(riwayat_transaksi);
+                        break;
+                    case 'tagihan_jatuh_tempo':
+                        tagihan_jatuh_tempo = response.data;
+                        break;
+                    case 'stok_menipis':
+                        stok_menipis = response.data;
+                        break;
+                    case 'obat_kedaluwarsa':
+                        obat_kedaluwarsa = response.data;
+                        break;
+                }
+                // Kamu bisa pakai dataStore[endpoint.assignTo] juga kalau lebih nyaman
+            })
+            .catch(error => {
+                console.error(`Gagal mengambil ${endpoint.description}:`, error);
+            });
         });
-    });
 
-} else {
-    console.warn('Token tidak ditemukan. Mungkin pengguna belum login.');
-}
-
+    } else {
+        console.warn('Token tidak ditemukan. Mungkin pengguna belum login.');
+    }
+});
 
 </script>
 @endsection

@@ -27,6 +27,30 @@
         @include('components.toast_error')
     @endsession
 
+    <!-- Inject API Token for Frontend -->
+    <script>
+        // Make API token available to frontend JavaScript
+        window.API_TOKEN = '{{ session('api_token') }}';
+        
+        // Helper function to get the current API token
+        function getApiToken() {
+            return window.API_TOKEN;
+        }
+        
+        // Helper function to set up axios with authentication
+        function setupAuthenticatedAxios() {
+            const token = getApiToken();
+            if (token) {
+                axios.defaults.headers.common['Authorization'] = `Bearer ${token}`;
+            }
+        }
+        
+        // Set up authentication when page loads
+        document.addEventListener('DOMContentLoaded', function() {
+            setupAuthenticatedAxios();
+        });
+    </script>
+
 </body>
 
 </html>
