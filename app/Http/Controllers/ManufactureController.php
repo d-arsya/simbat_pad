@@ -25,12 +25,19 @@ class ManufactureController extends Controller
     {
         try {
             $validate = $request->validate([
-                "name"=> "required|min:3|max:25|string"
+                "name"=> "required|min:3|max:25|string|unique:manufactures,name"
+            ], [
+                'name.unique' => 'Produsen sudah ada'
             ]);
             Manufacture::create([
                 "name"=>$request->name
             ]);
             return back()->with('success','Produsen berhasil dibuat');
+        } catch (\Illuminate\Validation\ValidationException $e) {
+            if (isset($e->errors()['name']) && in_array('Produsen sudah ada', $e->errors()['name'])) {
+                return back()->withErrors($e->errors())->withInput();
+            }
+            return back()->with('error', 'Produsen gagal dibuat')->withInput();
         } catch (\Throwable $e) {
             return back()->with('error','Produsen gagal dibuat');
         }
@@ -38,8 +45,18 @@ class ManufactureController extends Controller
     public function update(Request $request, Manufacture $manufacture)
     {
         try {
-            $manufacture->update($request->all());
+            $validate = $request->validate([
+                "name"=> "required|min:3|max:25|string|unique:manufactures,name," . $manufacture->id
+            ], [
+                'name.unique' => 'Produsen sudah ada'
+            ]);
+            $manufacture->update($validate);
             return redirect()->back()->with('success','Produsen berhasil diubah');
+        } catch (\Illuminate\Validation\ValidationException $e) {
+            if (isset($e->errors()['name']) && in_array('Produsen sudah ada', $e->errors()['name'])) {
+                return back()->withErrors($e->errors())->withInput();
+            }
+            return back()->with('error', 'Produsen gagal diubah')->withInput();
         } catch (\Throwable $e) {
             return redirect()->back()->with('error','Produsen gagal diubah');
         }
