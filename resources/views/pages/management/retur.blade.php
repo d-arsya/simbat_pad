@@ -35,8 +35,11 @@
                         <th class="px-6 py-3">Action</th>
                     </tr>
                 </thead>
-                <tbody id="retur-value"></tbody>
-                <tbody id="retur-data" class="text-gray-700">
+                <tbody id="drug-data">
+                    {{-- Data will be populated by JavaScript --}}
+                </tbody>
+                <!-- <tbody id="retur-value"></tbody> -->
+                <!-- <tbody id="retur-data" class="text-gray-700">
                     @foreach ($returs as $number => $item)
                         <tr class="border-b border-gray-200 hover:bg-gray-100">
                             <td class="px-6 py-3">{{ $number + 1 }}</td>
@@ -60,16 +63,67 @@
                             </td>
                         </tr>
                     @endforeach
-                </tbody>
+                </tbody> -->
             </table>
         </div>
         <div class="p-6">
             {{ $returs->links() }}
         </div>
     </div>
+    <!-- Scripts -->
+    <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
+
     <script>
+        // Configuration
+        const API_BASE_URL = 'https://simbat.madanateknologi.web.id/api/v1';
+        const per_page = 5;
+        const token = localStorage.getItem('token');
+
+        // State variables
         let timeout = null;
+        let query = "";
+        let temporaryData;
+        let data_drug = null;
+        let selectedId;
+
         const categoryInput = document.getElementById('retur-search')
+
+        // API Client
+        const api = axios.create({
+            baseURL: API_BASE_URL,
+            headers: {
+                'Authorization': `Bearer ${token}`,
+                'Content-Type': 'application/json'
+            }
+        });
+
+        // Event Listeners
+        document.addEventListener('DOMContentLoaded', initializePage);
+        // drugInput.addEventListener('input', handleSearchInput);
+
+        // Initialize Page
+        function initializePage() {
+            if (token) {
+                fetchDrugs();
+            }
+        }
+
+        // API Functions
+        function fetchDrugs(searchQuery = '', page = 1) {
+            api.get(`/management/returns?per_page=${per_page}&search=${searchQuery}&page=${page}`)
+                .then(response => {
+                    data_drug = response.data;
+                    console.log('Data obat:', data_drug);
+                    renderDrugTable(data_drug);
+                    updatePaginationInfo(data_drug.data);
+                })
+                .catch(error => {
+                    console.error('Gagal mengambil data retur:', error);
+                });
+        }
+
+
+
         categoryInput.addEventListener('input', function() {
             clearTimeout(timeout);
             const query = this.value;
@@ -96,6 +150,62 @@
                 }
             }, 400);
         });
+
+        function renderDrugTable(data) {
+            const tbody = document.getElementById("drug-data");
+            tbody.innerHTML = ""; // Clear existing rows
+
+            data.data.data.forEach((item, index) => {
+                const row = document.createElement("tr");
+                row.className = "border-b border-gray-200 hover:bg-gray-100";
+
+                // Create table cells
+                const noCell = createTableCell("py-3 px-6", index + 1 + ((data.data.current_page-1) * per_page));
+                const codeCell = createTableCell("py-3 px-6", item.code);
+                const nameCell = createTableCell("py-3 px-6 text-left", item.name);
+                const actionCell = createActionCell(item);
+
+                // Append cells to row
+                row.appendChild(noCell);
+                row.appendChild(codeCell);
+                row.appendChild(nameCell);
+                row.appendChild(actionCell);
+
+                // Append row to table
+                tbody.appendChild(row);
+            });
+
+            // Render pagination
+            renderPagination(data);
+        }
+
+
+        // categoryInput.addEventListener('input', function() {
+        //     clearTimeout(timeout);
+        //     const query = this.value;
+        //     timeout = setTimeout(() => {
+        //         if (query.length > 0) {
+        //             document.getElementById('retur-data').classList.add('hidden')
+        //             document.getElementById('retur-value').classList.remove('hidden')
+        //             fetch(`/management-search?query=${query}&variant=retur`)
+        //                 .then(response => response.json())
+        //                 .then(data => {
+        //                     const suggestions = document.getElementById('retur-value');
+        //                     suggestions.innerHTML = '';
+
+        //                     if (data.length > 0) {
+        //                         data.forEach((item, number) => {
+        //                             console.log(item)
+        //                             suggestions.innerHTML += generateTableRow(item, number)
+        //                         });
+        //                     }
+        //                 });
+        //         } else {
+        //             document.getElementById('retur-data').classList.remove('hidden')
+        //             document.getElementById('retur-value').classList.add('hidden')
+        //         }
+        //     }, 400);
+        // });
 
         function formatDate(date) {
             return new Date(date).toLocaleDateString('id-ID', {
@@ -136,5 +246,7 @@
         </tr>
     `;
         }
+    // Initialize data on page load
+    initializePage();
     </script>
 @endsection

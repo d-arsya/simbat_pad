@@ -58,6 +58,7 @@ class InventoryController extends ApiController
 
         $formattedInflows = $inflows->map(function ($inflow) {
             return [
+                'id' => $inflow->id,
                 'No. LPB' => $inflow->code,
                 'Vendor' => $inflow->vendor()->name,
                 'Date' => Carbon::parse($inflow->created_at)->isoFormat('D MMMM Y')
@@ -68,6 +69,12 @@ class InventoryController extends ApiController
             'status' => 'success',
             'message' => 'Inflows retrieved successfully',
             'data' => $formattedInflows,
+            'pagination' => [
+            'current_page' => $inflows->currentPage(),
+            'per_page' => $inflows->perPage(),
+            'total' => $inflows->total(),
+            'last_page' => $inflows->lastPage(),
+            ],
         ]);
     }
 
@@ -116,9 +123,9 @@ class InventoryController extends ApiController
     {
         $transaction = Transaction::findOrFail($id);
         $profile = Profile::first();
-        
+
         $formattedDate = Carbon::parse($transaction->created_at)->isoFormat('D MMMM Y');
-        
+
         $details = $transaction->details()->map(function ($detail) {
             $drug = $detail->drug();
             return [
@@ -278,14 +285,14 @@ class InventoryController extends ApiController
             foreach ($request->items as $item) {
                 $drug = Drug::where('name', $item['name'])->first();
                 $piecePrice = $drug->last_price;
-                
+
                 // Calculate total price based on unit
                 $totalPrice = match ($item['unit']) {
                     'pcs' => $piecePrice * $item['quantity'],
                     'pack' => $piecePrice * $item['quantity'] * $drug->piece_quantity,
                     'box' => $piecePrice * $item['quantity'] * $drug->piece_quantity * $drug->pack_quantity,
                 };
-                
+
                 $totalAmount += $totalPrice;
             }
 
@@ -311,7 +318,7 @@ class InventoryController extends ApiController
             foreach ($request->items as $item) {
                 $drug = Drug::where('name', $item['name'])->first();
                 $piecePrice = $drug->last_price;
-                
+
                 // Calculate total price based on unit
                 $totalPrice = match ($item['unit']) {
                     'pcs' => $piecePrice * $item['quantity'],
@@ -342,7 +349,7 @@ class InventoryController extends ApiController
                     // Update clinic stock only
                     $clinicStock = Clinic::where('drug_id', $drug->id)->first();
                     $clinicStock->quantity = $clinicStock->quantity + $quantity;
-                    
+
                     // Update clinic expiration dates
                     if ($clinicStock->oldest == null) {
                         $clinicStock->oldest = $item['expired'];
@@ -371,7 +378,7 @@ class InventoryController extends ApiController
                     // Update warehouse stock only
                     $warehouseStock = Warehouse::where('drug_id', $drug->id)->first();
                     $warehouseStock->quantity = $warehouseStock->quantity + $quantity;
-                    
+
                     // Update warehouse expiration dates
                     if ($warehouseStock->oldest == null) {
                         $warehouseStock->oldest = $item['expired'];
@@ -487,7 +494,7 @@ class InventoryController extends ApiController
         $judul = "Stock ".$drug->name;
         $stock = Warehouse::where('drug_id', $drug->id)->first();
         $inflow = Transaction::where('variant', 'LPB')->pluck('id');
-        
+
         $details = TransactionDetail::where('drug_id', $drug->id)
             ->whereIn('transaction_id', $inflow)
             ->whereNot('stock', 0)
@@ -539,7 +546,7 @@ class InventoryController extends ApiController
         $drugs = Drug::where('name', 'like', "%{$query}%")
             ->orWhere('code', 'like', "%{$query}%")
             ->pluck('id');
-            
+
         $warehouse = Warehouse::whereIn('drug_id', $drugs)->get();
 
         return response()->json([
@@ -630,7 +637,7 @@ class InventoryController extends ApiController
         $inflow = Transaction::where('variant', 'LPB')
             ->where('destination', 'clinic')
             ->pluck('id');
-        
+
         $details = TransactionDetail::where('drug_id', $drug->id)
             ->whereIn('transaction_id', $inflow)
             ->whereNot('stock', 0)
@@ -689,7 +696,7 @@ class InventoryController extends ApiController
         $drugs = Drug::where('name', 'like', "%{$query}%")
             ->orWhere('code', 'like', "%{$query}%")
             ->pluck('id');
-            
+
         $clinicStocks = Clinic::whereIn('drug_id', $drugs)->get();
 
         $formattedStocks = $clinicStocks->map(function ($stock) {
@@ -772,7 +779,7 @@ class InventoryController extends ApiController
             foreach ($request->items as $item) {
                 $drug = Drug::findOrFail($item['drug_id']);
                 $warehouseStock = Warehouse::where('drug_id', $drug->id)->first();
-                
+
                 // Check if warehouse has enough stock
                 if ($warehouseStock->quantity < $item['quantity']) {
                     return response()->json([
@@ -804,7 +811,7 @@ class InventoryController extends ApiController
                 // Update clinic stock
                 $clinicStock = Clinic::where('drug_id', $drug->id)->first();
                 $clinicStock->quantity = $clinicStock->quantity + $quantity;
-                
+
                 // Update clinic expiration dates if needed
                 if ($clinicStock->oldest == null) {
                     $clinicStock->oldest = $warehouseStock->oldest;
@@ -852,4 +859,4 @@ class InventoryController extends ApiController
             ], 500);
         }
     }
-} 
+}

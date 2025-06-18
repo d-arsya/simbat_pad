@@ -73,9 +73,95 @@
     </div>
     </div>
 
+    <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
     <script>
+        // Configuration
+        const API_BASE_URL = 'https://simbat.madanateknologi.web.id/api/v1';
+        const per_page = 5;
+        const token = localStorage.getItem('token');
+
+        // State variables
         let timeout = null;
+        let selectedId;
+        let query = "";
+        let temporaryData;
+        let data_stocks = null;
+        let currentPage = 1;
+
+        // API Client
+        const api = axios.create({
+            baseURL: API_BASE_URL,
+            headers: {
+                'Authorization': `Bearer ${token}`,
+                'Content-Type': 'application/json'
+            }
+        });
+
+        // Event Listeners
+        document.addEventListener('DOMContentLoaded', initializePage);
+
         const categoryInput = document.getElementById('bill-search')
+
+        // Initialize Page
+        function initializePage() {
+            if (token) {
+                fetchBills();
+            }
+        }
+
+        // API Functions
+        function fetchBills(searchQuery = '', page = 1, dateFrom = '', dateTo = '') {
+            const params = new URLSearchParams({
+                per_page: per_page,
+                search: searchQuery,
+                page: page
+            });
+
+            if (dateFrom) params.append('date_from', dateFrom);
+            if (dateTo) params.append('date_to', dateTo);
+
+            api.get(`/management/bills?${params.toString()}`)
+                .then(response => {
+                    data_stocks = response.data;
+                    // renderBillTable(data_stocks);
+                    console.log('Data stok:', data_stocks);
+                    // updatePaginationInfo(data_stocks.pagination);
+                    // updatePagination(data_stocks.data);
+                })
+                .catch(error => {
+                    console.error('Gagal mengambil data stok:', error);
+                    showErrorMessage('Gagal memuat data stok');
+                });
+        }
+
+        function handleDateFilter(event) {
+            event.preventDefault();
+
+            const dateFrom = dateFromInput?.value || '';
+            const dateTo = dateToInput?.value || '';
+
+            if (dateFrom && dateTo && dateFrom > dateTo) {
+                showErrorMessage('Tanggal awal tidak boleh lebih besar dari tanggal akhir');
+                return;
+            }
+
+            fetchBills(query, 1, dateFrom, dateTo);
+        }
+
+        function renderBillTable(data) {
+            console.log('Rendering data:', data);
+            const tbody = document.querySelector('tbody');
+            if (!tbody) return;
+
+            // Simpan data asli untuk filter
+            globalData = data.data;
+            globalPage = data.pagination;
+
+            // Render awal
+            updateTable(globalData, globalPage);
+            renderPagination(globalPage);
+        }
+
         categoryInput.addEventListener('input', function() {
             clearTimeout(timeout);
             const query = this.value;

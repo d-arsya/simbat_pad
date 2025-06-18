@@ -15,7 +15,8 @@
         <ul class="space-y-2 font-medium">
             <li>
                 <div style="margin-bottom: 30px; margin-left: 40px;">
-                    <img src="{{ Storage::url(App\Models\Profile::first()->logo) }}" alt="Simbat Logo"
+                    {{--  <img src="{{ Storage::url(App\Models\Profile::first()->logo) }}" alt="Simbat Logo"  --}}
+                    <img src="{{ asset('assets/logo.jpg') }}" alt="Simbat Logo"
                         style="width: 40px; height: 40px; margin-right: 3px; vertical-align: middle; display: inline-block;">
                     <span
                         style="font-size: 20px; font-weight: bold; vertical-align: middle; display: inline-block;">Simbat</span>
@@ -40,26 +41,26 @@
                             ->join('vendors', 'transactions.vendor_id', '=', 'vendors.id')
                             ->where('bills.status', 'Belum Bayar')
                             ->count();
-                        
+
                         // Get low stock alerts from warehouse
                         $gudangMenipis = DB::table('warehouse_inventory')
                             ->join('drugs', 'warehouse_inventory.drug_id', '=', 'drugs.id')
                             ->whereColumn('warehouse_inventory.quantity', '<=', 'drugs.minimum_capacity')
                             ->count();
-                            
+
                         // Get low stock alerts from clinic
                         $klinikMenipis = DB::table('clinic_inventory')
                             ->join('drugs', 'clinic_inventory.drug_id', '=', 'drugs.id')
                             ->whereColumn('clinic_inventory.quantity', '<=', 'drugs.minimum_capacity')
                             ->count();
-                        
+
                         // Get expiring drugs
                         $expired = DB::table('transaction_details')
                             ->join('drugs', 'transaction_details.drug_id', '=', 'drugs.id')
                             ->where('transaction_details.expired', '<=', now()->addDays(30))
                             ->where('transaction_details.stock', '>', 0)
                             ->count();
-                        
+
                         // Sum up all notifications
                         $totalNotifications = $jatuhTempo + $gudangMenipis + $klinikMenipis + $expired;
                     @endphp

@@ -83,225 +83,207 @@
 <!-- Scripts -->
 <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
 <script>
-    // Configuration
-    const API_BASE_URL = 'http://localhost:8000/api/v1';
-    const per_page = 5;
-    const token = localStorage.getItem('token');
+    document.addEventListener('DOMContentLoaded', function () {
+        const token = window.API_TOKEN || "{{ env('API_TOKEN') }}";
+        const per_page = 5;
+        let currentPage = 1;
+        let searchQuery = '';
 
-    // State variables
-    let timeout = null;
-    let selectedId;
-    let query = "";
-    let temporaryData;
-    let data_manufacture = null;
-
-    // DOM Elements
-    const manufactureInput = document.getElementById('manufacture-search');
-
-    // API Client
-    const api = axios.create({
-        baseURL: API_BASE_URL,
-        headers: {
-            'Authorization': `Bearer ${token}`,
-            'Content-Type': 'application/json'
-        }
-    });
-
-    // Event Listeners
-    document.addEventListener('DOMContentLoaded', initializePage);
-    manufactureInput.addEventListener('input', handleSearchInput);
-    document.getElementById('create-manufacture-form').addEventListener('submit', handleCreateForm);
-    document.getElementById('edit-manufacture-form').addEventListener('submit', handleEditForm);
-
-    // Initialize Page
-    function initializePage() {
         if (token) {
+            console.log('Token found:', token);
             fetchManufactures();
+        } else {
+            console.error('API token not found');
         }
-    }
 
-    // API Functions
-    function fetchManufactures(searchQuery = '', page = 1) {
-        api.get(`/manufactures?per_page=${per_page}&search=${searchQuery}&page=${page}`)
+        document.getElementById('manufacture-search').addEventListener('input', handleSearchInput);
+        document.getElementById('create-manufacture-form').addEventListener('submit', handleCreateForm);
+        document.getElementById('edit-manufacture-form').addEventListener('submit', handleEditForm);
+
+        function fetchManufactures(page = 1) {
+            currentPage = page;
+            axios.get(`/api/v1/manufactures?per_page=${per_page}&page=${page}&search=${searchQuery}`, {
+                headers: {
+                    'Authorization': `Bearer ${token}`
+                }
+            })
             .then(response => {
-                data_manufacture = response.data;
-                renderManufactureTable(data_manufacture);
-                updatePaginationInfo(data_manufacture.data);
+                console.log('Manufactures data:', response.data);
+                renderManufactureTable(response.data);
+                updatePaginationInfo(response.data);
             })
             .catch(error => {
-                console.error('Gagal mengambil data produsen:', error);
+                console.error('Failed to fetch manufactures:', error);
             });
-    }
-
-    // Event Handlers
-    function handleSearchInput() {
-        clearTimeout(timeout);
-        query = this.value;
-
-        timeout = setTimeout(() => {
-            if (query.length > 0) {
-                api.get(`/manufactures?search=${query}&per_page=${per_page}`)
-                    .then(response => {
-                        temporaryData = response.data;
-                        renderManufactureTable(temporaryData);
-                        updatePaginationInfo(temporaryData.data);
-                    })
-                    .catch(error => {
-                        console.error('Gagal mencari data produsen:', error);
-                    });
-            } else {
-                renderManufactureTable(data_manufacture);
-                updatePaginationInfo(data_manufacture.data);
-            }
-        }, 400);
-    }
-
-    function handleCreateForm(e) {
-        e.preventDefault();
-        showModal('add', 'create-manufacture-form', `${API_BASE_URL}/manufactures`, 'post');
-    }
-
-    function handleEditForm(e) {
-        e.preventDefault();
-        document.getElementById('editModal').classList.add('hidden');
-        showModal('save', 'edit-manufacture-form', `${API_BASE_URL}/manufactures/${selectedId}`, 'put');
-    }
-
-    // UI Functions
-    function showEditModal(name, id) {
-        document.querySelector('#editModal input[name="name"]').value = name;
-        selectedId = id;
-        document.querySelector('#editModal form').setAttribute('action', `{{ route('master.manufacture.index') }}/${id}`);
-        document.getElementById('editModal').classList.remove('hidden');
-    }
-
-    function closeEditModal() {
-        document.getElementById('editModal').classList.add('hidden');
-    }
-
-    function renderManufactureTable(data) {
-        const tbody = document.getElementById("manufacture-data");
-        tbody.innerHTML = ""; // Clear existing rows
-
-        data.data.data.forEach((item, index) => {
-            const row = document.createElement("tr");
-            row.className = "border-b border-gray-200 hover:bg-gray-100";
-
-            // Create table cells
-            const noCell = createTableCell("py-3 px-6", index + 1 + ((data.data.current_page-1) * per_page));
-            const nameCell = createTableCell("py-3 px-6 text-left", item.name);
-            const actionCell = createActionCell(item);
-
-            // Append cells to row
-            row.appendChild(noCell);
-            row.appendChild(nameCell);
-            row.appendChild(actionCell);
-
-            // Append row to table
-            tbody.appendChild(row);
-        });
-
-        // Render pagination
-        renderPagination(data);
-    }
-
-    function createTableCell(className, content) {
-        const cell = document.createElement("td");
-        cell.className = className;
-        cell.textContent = content;
-        return cell;
-    }
-
-    function createActionCell(item) {
-        const cell = document.createElement("td");
-        cell.className = "py-3 px-6 flex justify-center";
-
-        // Edit button
-        const editBtn = document.createElement("a");
-        editBtn.className = "flex cursor-pointer items-center bg-yellow-300 text-white text-sm px-2 py-2 rounded-lg shadow hover:bg-yellow-400 mr-2";
-        editBtn.setAttribute("title", "Edit");
-        editBtn.innerHTML = `
-            <svg width="20" height="21" fill="none" xmlns="http://www.w3.org/2000/svg">
-                <path d="M15.728 9.68602L14.314 8.27202L5 17.586V19H6.414L15.728 9.68602ZM17.142 8.27202L18.556 6.85802L17.142 5.44402L15.728 6.85802L17.142 8.27202ZM7.242 21H3V16.757L16.435 3.32202C16.6225 3.13455 16.8768 3.02924 17.142 3.02924C17.4072 3.02924 17.6615 3.13455 17.849 3.32202L20.678 6.15102C20.8655 6.33855 20.9708 6.59286 20.9708 6.85802C20.9708 7.12319 20.8655 7.37749 20.678 7.56502L7.243 21H7.242Z" fill="white" />
-            </svg>
-        `;
-        editBtn.onclick = () => showEditModal(item.name, item.id);
-
-        // Delete button
-        const deleteBtn = document.createElement("button");
-        deleteBtn.type = "button";
-        deleteBtn.className = "bg-red-500 text-white text-sm px-2 py-2 rounded-lg shadow hover:bg-red-600";
-        deleteBtn.setAttribute("title", "Delete");
-        deleteBtn.innerHTML = `
-            <svg width="20" height="21" fill="none" xmlns="http://www.w3.org/2000/svg">
-                <path d="M14.167 5.50002H18.3337V7.16669H16.667V18C16.667 18.221 16.5792 18.433 16.4229 18.5893C16.2666 18.7456 16.0547 18.8334 15.8337 18.8334H4.16699C3.94598 18.8334 3.73402 18.7456 3.57774 18.5893C3.42146 18.433 3.33366 18.221 3.33366 18V7.16669H1.66699V5.50002H5.83366V3.00002C5.83366 2.77901 5.92146 2.56704 6.07774 2.41076C6.23402 2.25448 6.44598 2.16669 6.66699 2.16669H13.3337C13.5547 2.16669 13.7666 2.25448 13.9229 2.41076C14.0792 2.56704 14.167 2.77901 14.167 3.00002V5.50002ZM15.0003 7.16669H5.00033V17.1667H15.0003V7.16669ZM7.50033 3.83335V5.50002H12.50033V3.83335H7.50033Z" fill="white"/>
-            </svg>
-        `;
-        deleteBtn.onclick = () => showModal("delete", "delete-form-" + item.id, `${API_BASE_URL}/manufactures/${item.id}`, 'delete');
-
-        cell.appendChild(editBtn);
-        cell.appendChild(deleteBtn);
-
-        return cell;
-    }
-
-    function updatePaginationInfo(data) {
-        const start = ((data.current_page - 1) * data.per_page) + 1;
-        const end = Math.min(data.current_page * data.per_page, data.total);
-        const total = data.total;
-
-        document.getElementById('pagination-info').textContent =
-            `Showing ${start} to ${end} of ${total} results`;
-    }
-
-    function renderPagination(data) {
-        const currentPage = data.data.current_page;
-        const lastPage = data.data.last_page;
-
-        let elements = '<nav class="isolate inline-flex -space-x-px rounded-md shadow-xs" aria-label="Pagination">';
-
-        // Previous button
-        elements += `<span onclick="${currentPage === 1 ? '' : `getDataPage(${currentPage - 1})`}"
-            class="relative inline-flex items-center px-4 py-2 text-sm font-medium
-            ${currentPage === 1 ? 'text-gray-300 cursor-not-allowed' : 'text-gray-500 cursor-pointer hover:bg-gray-50'}
-            bg-white border border-gray-300 rounded-l-md leading-5 hover:text-gray-500 focus:z-10 focus:outline-none focus:ring ring-gray-300 focus:border-blue-300 active:bg-gray-100 active:text-gray-700 transition ease-in-out duration-150"
-            ${currentPage === 1 ? 'disabled aria-disabled="true"' : ''}>
-            &lsaquo;
-            </span>`;
-
-        // Tombol-tombol halaman (existing loop)
-            for (let i = 1; i < data.data.links.length - 1; i++) {
-                elements += '<span onclick="getDataPage(' + i + ')" class="relative inline-flex items-center px-4 py-2 -ml-px text-sm font-medium text-gray-700 bg-white border border-gray-300 leading-5 hover:text-gray-500 focus:z-10 focus:outline-none focus:ring ring-gray-300 focus:border-blue-300 active:bg-gray-100 active:text-gray-700 transition ease-in-out duration-150">' + data.data.links[i].label + '</span>';
-            }
-
-        // Next button
-        elements += `<span onclick="${currentPage === lastPage ? '' : `getDataPage(${currentPage + 1})`}"
-            class="relative inline-flex items-center px-4 py-2 -ml-px text-sm font-medium
-            ${currentPage === lastPage ? 'text-gray-300 cursor-not-allowed' : 'text-gray-500 cursor-pointer hover:bg-gray-50'}
-            bg-white border border-gray-300 rounded-r-md leading-5 hover:text-gray-500 focus:z-10 focus:outline-none focus:ring ring-gray-300 focus:border-blue-300 active:bg-gray-100 active:text-gray-700 transition ease-in-out duration-150"
-            ${currentPage === lastPage ? 'disabled aria-disabled="true"' : ''}>
-            &rsaquo;
-            </span>`;
-        elements += '</nav>';
-
-        document.getElementById("pagination-div").innerHTML = elements;
-    }
-
-    // Pagination handler
-    function getDataPage(page) {
-        if (query.length > 0) {
-            api.get(`/manufactures?search=${query}&per_page=${per_page}&page=${page}`)
-                .then(response => {
-                    temporaryData = response.data;
-                    renderManufactureTable(temporaryData);
-                    updatePaginationInfo(temporaryData.data);
-                });
-        } else {
-            fetchManufactures('', page);
         }
-    }
 
-    // Initialize data on page load
-    initializePage();
+        // 💡 Tambahkan ini agar fungsi fetchManufactures bisa dipanggil dari HTML onclick
+        window.fetchManufactures = fetchManufactures;
+
+        function handleSearchInput(e) {
+            searchQuery = e.target.value;
+            clearTimeout(this.timeout);
+            this.timeout = setTimeout(() => {
+                fetchManufactures(1);
+            }, 400);
+        }
+
+        function handleCreateForm(e) {
+            e.preventDefault();
+            const formData = new FormData(e.target);
+
+            axios.post('/api/v1/manufactures', formData, {
+                headers: {
+                    'Authorization': `Bearer ${token}`,
+                    'Content-Type': 'multipart/form-data'
+                }
+            })
+            .then(response => {
+                console.log('Manufacture created:', response.data);
+                fetchManufactures(currentPage);
+                e.target.reset();
+            })
+            .catch(error => {
+                console.error('Failed to create manufacture:', error);
+            });
+        }
+
+        function handleEditForm(e) {
+            e.preventDefault();
+            const formData = new FormData(e.target);
+            const manufactureId = selectedId;
+
+            axios.post(`/api/v1/manufactures/${manufactureId}`, formData, {
+                headers: {
+                    'Authorization': `Bearer ${token}`,
+                    'Content-Type': 'multipart/form-data'
+                },
+                params: {
+                    '_method': 'PUT'
+                }
+            })
+            .then(response => {
+                console.log('Manufacture updated:', response.data);
+                closeEditModal();
+                fetchManufactures(currentPage);
+            })
+            .catch(error => {
+                console.error('Failed to update manufacture:', error);
+            });
+        }
+
+        function renderManufactureTable(data) {
+            const tbody = document.getElementById("manufacture-data");
+            tbody.innerHTML = "";
+
+            data.data.data.forEach((item, index) => {
+                const row = document.createElement("tr");
+                row.className = "border-b border-gray-200 hover:bg-gray-100";
+
+                const rowNumber = index + 1 + ((data.data.current_page - 1) * per_page);
+
+                row.innerHTML = `
+                    <td class="py-3 px-6">${rowNumber}</td>
+                    <td class="py-3 px-6 text-left">${item.name}</td>
+                    <td class="py-3 px-6 flex justify-center">
+                        <a class="flex cursor-pointer items-center bg-yellow-300 text-white text-sm px-2 py-2 rounded-lg shadow hover:bg-yellow-400 mr-2" title="Edit" onclick="showEditModal('${item.name}', ${item.id})">
+                            <svg width="20" height="21" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                <path d="M15.728 9.68602L14.314 8.27202L5 17.586V19H6.414L15.728 9.68602ZM17.142 8.27202L18.556 6.85802L17.142 5.44402L15.728 6.85802L17.142 8.27202ZM7.242 21H3V16.757L16.435 3.32202C16.6225 3.13455 16.8768 3.02924 17.142 3.02924C17.4072 3.02924 17.6615 3.13455 17.849 3.32202L20.678 6.15102C20.8655 6.33855 20.9708 6.59286 20.9708 6.85802C20.9708 7.12319 20.8655 7.37749 20.678 7.56502L7.243 21H7.242Z" fill="white" />
+                            </svg>
+                        </a>
+                        <button type="button" class="bg-red-500 text-white text-sm px-2 py-2 rounded-lg shadow hover:bg-red-600" title="Delete" onclick="deleteManufacture(${item.id})">
+                            <svg width="20" height="21" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                <path d="M14.167 5.50002H18.3337V7.16669H16.667V18C16.667 18.221 16.5792 18.433 16.4229 18.5893C16.2666 18.7456 16.0547 18.8334 15.8337 18.8334H4.16699C3.94598 18.8334 3.73402 18.7456 3.57774 18.5893C3.42146 18.433 3.33366 18.221 3.33366 18V7.16669H1.66699V5.50002H5.83366V3.00002C5.83366 2.77901 5.92146 2.56704 6.07774 2.41076C6.23402 2.25448 6.44598 2.16669 6.66699 2.16669H13.3337C13.5547 2.16669 13.7666 2.25448 13.9229 2.41076C14.0792 2.56704 14.167 2.77901 14.167 3.00002V5.50002ZM15.0003 7.16669H5.0003V17.1667H15.0003V7.16669ZM7.5003 3.83335V5.50002H12.5003V3.83335H7.5003Z" fill="white"/>
+                            </svg>
+                        </button>
+                    </td>
+                `;
+                tbody.appendChild(row);
+            });
+
+            renderPagination(data);
+        }
+
+        function updatePaginationInfo(responseData) {
+            const data = responseData.data; // 🔁 ambil objek 'data' dari response
+
+            const start = ((data.current_page - 1) * data.per_page) + 1;
+            const end = Math.min(data.current_page * data.per_page, data.total);
+            const total = data.total;
+
+            document.getElementById('pagination-info').textContent =
+                `Showing ${start} to ${end} of ${total} results`;
+        }
+
+        function renderPagination(data) {
+            const currentPage = data.data.current_page;
+            const lastPage = data.data.last_page;
+            const links = data.data.links;
+
+            let paginationHTML = '<nav class="isolate inline-flex -space-x-px rounded-md shadow-xs" aria-label="Pagination">';
+
+            paginationHTML += `
+                <span onclick="${currentPage === 1 ? '' : `fetchManufactures(${currentPage - 1})`}"
+                    class="relative inline-flex items-center px-4 py-2 text-sm font-medium
+                    ${currentPage === 1 ? 'text-gray-300 cursor-not-allowed' : 'text-gray-500 cursor-pointer hover:bg-gray-50'}
+                    bg-white border border-gray-300 rounded-l-md leading-5">
+                    &lsaquo;
+                </span>
+            `;
+
+            links.forEach((link, index) => {
+                if (index === 0 || index === links.length - 1) return;
+                paginationHTML += `
+                    <span onclick="fetchManufactures(${link.label})"
+                        class="relative inline-flex items-center px-4 py-2 -ml-px text-sm font-medium
+                        ${link.active ? 'bg-blue-500 text-white' : 'bg-white text-gray-700 hover:bg-gray-50'}
+                        border border-gray-300 leading-5">
+                        ${link.label}
+                    </span>
+                `;
+            });
+
+            paginationHTML += `
+                <span onclick="${currentPage === lastPage ? '' : `fetchManufactures(${currentPage + 1})`}"
+                    class="relative inline-flex items-center px-4 py-2 -ml-px text-sm font-medium
+                    ${currentPage === lastPage ? 'text-gray-300 cursor-not-allowed' : 'text-gray-500 cursor-pointer hover:bg-gray-50'}
+                    bg-white border border-gray-300 rounded-r-md leading-5">
+                    &rsaquo;
+                </span>
+            `;
+
+            paginationHTML += '</nav>';
+            document.getElementById("pagination-div").innerHTML = paginationHTML;
+        }
+
+        // Global deleteManufacture
+        window.deleteManufacture = function (id) {
+            if (confirm('Are you sure you want to delete this manufacture?')) {
+                axios.delete(`/api/v1/manufactures/${id}`, {
+                    headers: {
+                        'Authorization': `Bearer ${token}`
+                    }
+                })
+                .then(response => {
+                    console.log('Manufacture deleted:', response.data);
+                    fetchManufactures(currentPage);
+                })
+                .catch(error => {
+                    console.error('Failed to delete manufacture:', error);
+                });
+            }
+        };
+    });
+
+    // Global modal handlers
+    window.showEditModal = function (name, id) {
+        document.querySelector('#editModal input[name="name"]').value = name;
+        window.selectedId = id;
+        document.getElementById('editModal').classList.remove('hidden');
+    };
+
+    window.closeEditModal = function () {
+        document.getElementById('editModal').classList.add('hidden');
+    };
 </script>
 @endsection

@@ -122,7 +122,7 @@
                     {{--  @endif  --}}
                 </div>
                 <div class="mt-10 flex justify-center">
-                    <a href="{{ route('user.logout') }}" 
+                    <a href="{{ route('user.logout') }}"
                        class="bg-gray-300 hover:bg-red-500 hover:text-white text-gray-700 py-2 px-4 rounded-lg flex items-center justify-center w-full text-center">
                         <svg class="mr-2" width="20px" height="20px" viewBox="0 0 24 24" fill="none"
                             xmlns="http://www.w3.org/2000/svg">
@@ -140,10 +140,13 @@
 </div>
 
 <script>
+    console.log('Modal script loaded');
     function toggleModal() {
         const modal = document.getElementById('modal');
         modal.classList.toggle('hidden');
     }
+    {{--  const user = JSON.parse(localStorage.getItem('user'));  --}}
+
 
     const user = {
         name: '{{ auth()->user()->name }}',
@@ -151,10 +154,13 @@
         role: '{{ auth()->user()->role }}',
         avatar: '{{ auth()->user()->avatar }}'
     };
+    console.log(user);
 
     document.getElementById('user-avatar').src = '/storage/' + user.avatar;
+    console.log('User avatar:', document.getElementById('user-avatar').src);
     document.getElementById('user-avatar-modal').src = '/storage/' + user.avatar;
     document.getElementById('sp-name').innerText = user.name;
+    console.log('User name:', document.getElementById('sp-name').innerText);
     document.getElementById('sp-role').innerText = user.role;
     document.getElementById('sp-email').innerText = user.email;
 

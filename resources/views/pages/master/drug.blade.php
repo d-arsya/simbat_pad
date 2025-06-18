@@ -75,229 +75,186 @@
     </div>
 </div>
 
-<!-- Scripts -->
 <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
 <script>
-    // Configuration
-    const API_BASE_URL = 'http://localhost:8000/api/v1';
-    const per_page = 5;
-    const token = localStorage.getItem('token');
+    document.addEventListener('DOMContentLoaded', function () {
+        const token = window.API_TOKEN || "{{ env('API_TOKEN') }}";
+        const per_page = 5;
+        let currentPage = 1;
+        let searchQuery = '';
+        let selectedId = null;
 
-    // State variables
-    let timeout = null;
-    let query = "";
-    let temporaryData;
-    let data_drug = null;
-    let selectedId;
+        if (token) {
+            console.log('Token found:', token);
+            fetchDrugs();
+        } else {
+            console.error('API token not found');
+        }
 
-    // DOM Elements
-    const drugInput = document.getElementById('drug-search');
+        document.getElementById('drug-search').addEventListener('input', handleSearchInput);
+        document.getElementById('delete-drug-form').addEventListener('submit', handleDeleteForm);
 
-    // API Client
-    const api = axios.create({
-        baseURL: API_BASE_URL,
+        function fetchDrugs(page = 1) {
+            currentPage = page;
+            axios.get(`/api/v1/drugs?per_page=${per_page}&page=${page}&search=${searchQuery}`, {
+                headers: {
+                    'Authorization': `Bearer ${token}`
+                }
+            })
+            .then(response => {
+                console.log('Drugs data:', response.data);
+                renderDrugTable(response.data);
+                updatePaginationInfo(response.data);
+            })
+            .catch(error => {
+                console.error('Failed to fetch drugs:', error);
+            });
+        }
+
+        window.fetchDrugs = fetchDrugs;
+
+        function handleSearchInput(e) {
+            searchQuery = e.target.value;
+            clearTimeout(this.timeout);
+            this.timeout = setTimeout(() => {
+                fetchDrugs(1);
+            }, 400);
+        }
+
+       function handleDeleteForm(e) {
+    e.preventDefault();
+    const drugId = selectedId;
+
+    if (!drugId) {
+        console.error('Tidak ada obat yang dipilih untuk dihapus');
+        return;
+    }
+
+    axios.delete(`/api/v1/drugs/${drugId}`, {
         headers: {
             'Authorization': `Bearer ${token}`,
-            'Content-Type': 'application/json'
+            'Content-Type': 'application/json',
+            'Accept': 'application/json'
         }
-    });
+    })
+    .then(response => {
+        console.log('Obat berhasil dihapus:', response.data);
+        closeDeleteModal();
+        fetchDrugs(currentPage);
+        // Tampilkan pesan sukses
+        alert('Obat berhasil dihapus');
+    })
+    .catch(error => {
+        console.error('Gagal menghapus obat:', error);
+        let pesanError = 'Gagal menghapus obat. Silakan coba lagi.';
 
-    // Event Listeners
-    document.addEventListener('DOMContentLoaded', initializePage);
-    drugInput.addEventListener('input', handleSearchInput);
-
-    // Initialize Page
-    function initializePage() {
-        if (token) {
-            fetchDrugs();
-        }
-    }
-
-    // API Functions
-    function fetchDrugs(searchQuery = '', page = 1) {
-        api.get(`/drugs?per_page=${per_page}&search=${searchQuery}&page=${page}`)
-            .then(response => {
-                data_drug = response.data;
-                renderDrugTable(data_drug);
-                updatePaginationInfo(data_drug.data);
-            })
-            .catch(error => {
-                console.error('Gagal mengambil data obat:', error);
-            });
-    }
-
-    // Event Handlers
-    function handleSearchInput() {
-        clearTimeout(timeout);
-        query = this.value;
-
-        timeout = setTimeout(() => {
-            if (query.length > 0) {
-                api.get(`/drugs?search=${query}&per_page=${per_page}`)
-                    .then(response => {
-                        temporaryData = response.data;
-                        renderDrugTable(temporaryData);
-                        updatePaginationInfo(temporaryData.data);
-                    });
-            } else {
-                renderDrugTable(data_drug);
-                updatePaginationInfo(data_drug.data);
+        // Cek error response spesifik
+        if (error.response) {
+            if (error.response.status === 422) {
+                pesanError = 'Tidak dapat menghapus obat karena masih memiliki stok';
+            } else if (error.response.data && error.response.data.message) {
+                pesanError = error.response.data.message;
             }
-        }, 400);
-    }
-
-    // UI Functions
-    function showDeleteModal(id) {
-        selectedId = id;
-        document.getElementById('delete-drug-form').setAttribute('action', `${API_BASE_URL}/drugs/${id}`);
-        document.getElementById('deleteModal').classList.remove('hidden');
-    }
-
-    function closeDeleteModal() {
-        document.getElementById('deleteModal').classList.add('hidden');
-    }
-
-    function renderDrugTable(data) {
-        const tbody = document.getElementById("drug-data");
-        tbody.innerHTML = ""; // Clear existing rows
-
-        data.data.data.forEach((item, index) => {
-            const row = document.createElement("tr");
-            row.className = "border-b border-gray-200 hover:bg-gray-100";
-
-            // Create table cells
-            const noCell = createTableCell("py-3 px-6", index + 1 + ((data.data.current_page-1) * per_page));
-            const codeCell = createTableCell("py-3 px-6", item.code);
-            const nameCell = createTableCell("py-3 px-6 text-left", item.name);
-            const actionCell = createActionCell(item);
-
-            // Append cells to row
-            row.appendChild(noCell);
-            row.appendChild(codeCell);
-            row.appendChild(nameCell);
-            row.appendChild(actionCell);
-
-            // Append row to table
-            tbody.appendChild(row);
-        });
-
-        // Render pagination
-        renderPagination(data);
-    }
-
-    function createTableCell(className, content) {
-        const cell = document.createElement("td");
-        cell.className = className;
-        cell.textContent = content;
-        return cell;
-    }
-
-    function createActionCell(item) {
-        const cell = document.createElement("td");
-        cell.className = "py-3 px-6 flex justify-center";
-
-        // Edit button
-        const editBtn = document.createElement("a");
-        editBtn.className = "flex cursor-pointer items-center bg-yellow-300 text-white text-sm px-2 py-2 rounded-lg shadow hover:bg-yellow-400 mr-2";
-        editBtn.setAttribute("title", "Edit");
-        editBtn.href = `/master/drug/${item.id}/edit`;
-        editBtn.innerHTML = `
-            <svg width="20" height="21" fill="none" xmlns="http://www.w3.org/2000/svg">
-                <path d="M15.728 9.68602L14.314 8.27202L5 17.586V19H6.414L15.728 9.68602ZM17.142 8.27202L18.556 6.85802L17.142 5.44402L15.728 6.85802L17.142 8.27202ZM7.242 21H3V16.757L16.435 3.32202C16.6225 3.13455 16.8768 3.02924 17.142 3.02924C17.4072 3.02924 17.6615 3.13455 17.849 3.32202L20.678 6.15102C20.8655 6.33855 20.9708 6.59286 20.9708 6.85802C20.9708 7.12319 20.8655 7.37749 20.678 7.56502L7.243 21H7.242Z" fill="white" />
-            </svg>
-        `;
-
-        // Delete button
-        const deleteBtn = document.createElement("button");
-        deleteBtn.type = "button";
-        deleteBtn.className = "bg-red-500 text-white text-sm px-2 py-2 rounded-lg shadow hover:bg-red-600";
-        deleteBtn.setAttribute("title", "Delete");
-        deleteBtn.innerHTML = `
-            <svg width="20" height="21" fill="none" xmlns="http://www.w3.org/2000/svg">
-                <path d="M14.167 5.50002H18.3337V7.16669H16.667V18C16.667 18.221 16.5792 18.433 16.4229 18.5893C16.2666 18.7456 16.0547 18.8334 15.8337 18.8334H4.16699C3.94598 18.8334 3.73402 18.7456 3.57774 18.5893C3.42146 18.433 3.33366 18.221 3.33366 18V7.16669H1.66699V5.50002H5.83366V3.00002C5.83366 2.77901 5.92146 2.56704 6.07774 2.41076C6.23402 2.25448 6.44598 2.16669 6.66699 2.16669H13.3337C13.5547 2.16669 13.7666 2.25448 13.9229 2.41076C14.0792 2.56704 14.167 2.77901 14.167 3.00002V5.50002ZM15.0003 7.16669H5.0003V17.1667H15.0003V7.16669ZM7.5003 3.83335V5.50002H12.5003V3.83335H7.5003Z" fill="white"/>
-            </svg>
-        `;
-        deleteBtn.onclick = () => showDeleteModal(item.id);
-
-        cell.appendChild(editBtn);
-        cell.appendChild(deleteBtn);
-
-        return cell;
-    }
-
-    function updatePaginationInfo(data) {
-        const start = ((data.current_page - 1) * data.per_page) + 1;
-        const end = Math.min(data.current_page * data.per_page, data.total);
-        const total = data.total;
-
-        document.getElementById('pagination-info').textContent =
-            `Showing ${start} to ${end} of ${total} results`;
-    }
-
-    function renderPagination(data) {
-        const currentPage = data.data.current_page;
-        const lastPage = data.data.last_page;
-
-        let elements = '<nav class="isolate inline-flex -space-x-px rounded-md shadow-xs" aria-label="Pagination">';
-
-        // Previous button
-        elements += `<span onclick="${currentPage === 1 ? '' : `getDataPage(${currentPage - 1})`}"
-            class="relative inline-flex items-center px-4 py-2 text-sm font-medium
-            ${currentPage === 1 ? 'text-gray-300 cursor-not-allowed' : 'text-gray-500 cursor-pointer hover:bg-gray-50'}
-            bg-white border border-gray-300 rounded-l-md leading-5 hover:text-gray-500 focus:z-10 focus:outline-none focus:ring ring-gray-300 focus:border-blue-300 active:bg-gray-100 active:text-gray-700 transition ease-in-out duration-150"
-            ${currentPage === 1 ? 'disabled aria-disabled="true"' : ''}>
-            &lsaquo;
-            </span>`;
-
-        // Page buttons
-        for (let i = 1; i < data.data.links.length - 1; i++) {
-            elements += '<span onclick="getDataPage(' + i + ')" class="relative inline-flex items-center px-4 py-2 -ml-px text-sm font-medium text-gray-700 bg-white border border-gray-300 leading-5 hover:text-gray-500 focus:z-10 focus:outline-none focus:ring ring-gray-300 focus:border-blue-300 active:bg-gray-100 active:text-gray-700 transition ease-in-out duration-150">' + data.data.links[i].label + '</span>';
         }
 
-        // Next button
-        elements += `<span onclick="${currentPage === lastPage ? '' : `getDataPage(${currentPage + 1})`}"
-            class="relative inline-flex items-center px-4 py-2 -ml-px text-sm font-medium
-            ${currentPage === lastPage ? 'text-gray-300 cursor-not-allowed' : 'text-gray-500 cursor-pointer hover:bg-gray-50'}
-            bg-white border border-gray-300 rounded-r-md leading-5 hover:text-gray-500 focus:z-10 focus:outline-none focus:ring ring-gray-300 focus:border-blue-300 active:bg-gray-100 active:text-gray-700 transition ease-in-out duration-150"
-            ${currentPage === lastPage ? 'disabled aria-disabled="true"' : ''}>
-            &rsaquo;
-            </span>`;
-        elements += '</nav>';
-
-        document.getElementById("pagination-div").innerHTML = elements;
-    }
-
-    // Pagination handler
-    function getDataPage(page) {
-        if (query.length > 0) {
-            api.get(`/drugs?search=${query}&per_page=${per_page}&page=${page}`)
-                .then(response => {
-                    temporaryData = response.data;
-                    renderDrugTable(temporaryData);
-                    updatePaginationInfo(temporaryData.data);
-                });
-        } else {
-            fetchDrugs('', page);
-        }
-    }
-
-    // Form submission handler for delete
-    document.getElementById('delete-drug-form').addEventListener('submit', function(e) {
-        e.preventDefault();
-        const form = this;
-        const url = form.getAttribute('action');
-
-        api.delete(url)
-            .then(response => {
-                closeDeleteModal();
-                fetchDrugs(query);
-            })
-            .catch(error => {
-                console.error('Gagal menghapus obat:', error);
-            });
+        alert(pesanError);
     });
+}
+        function renderDrugTable(data) {
+            const tbody = document.getElementById("drug-data");
+            tbody.innerHTML = "";
 
-    // Initialize data on page load
-    initializePage();
+            data.data.data.forEach((item, index) => {
+                const row = document.createElement("tr");
+                row.className = "border-b border-gray-200 hover:bg-gray-100";
+
+                const rowNumber = index + 1 + ((data.data.current_page - 1) * per_page);
+
+                row.innerHTML = `
+                    <td class="py-3 px-6">${rowNumber}</td>
+                    <td class="py-3 px-6">${item.code}</td>
+                    <td class="py-3 px-6 text-left">${item.name}</td>
+                    <td class="py-3 px-6 flex justify-center">
+                        <a class="flex cursor-pointer items-center bg-blue-500  text-white text-sm px-2 py-2 rounded-lg shadow hover:bg-blue-600 mr-2" title="Edit" href="/master/drug/${item.id}/edit">
+                            <svg width="20" height="20" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <path d="M9.99972 2.5C14.4931 2.5 18.2314 5.73333 19.0156 10C18.2322 14.2667 14.4931 17.5 9.99972 17.5C5.50639 17.5 1.76805 14.2667 0.983887 10C1.76722 5.73333 5.50639 2.5 9.99972 2.5ZM9.99972 15.8333C11.6993 15.833 13.3484 15.2557 14.6771 14.196C16.0058 13.1363 16.9355 11.6569 17.3139 10C16.9341 8.34442 16.0038 6.86667 14.6752 5.80835C13.3466 4.75004 11.6983 4.17377 9.99972 4.17377C8.30113 4.17377 6.65279 4.75004 5.3242 5.80835C3.9956 6.86667 3.06536 8.34442 2.68555 10C3.06397 11.6569 3.99361 13.1363 5.32234 14.196C6.65106 15.2557 8.30016 15.833 9.99972 15.8333V15.8333ZM9.99972 13.75C9.00516 13.75 8.05133 13.3549 7.34807 12.6516C6.64481 11.9484 6.24972 10.9946 6.24972 10C6.24972 9.00544 6.64481 8.05161 7.34807 7.34835C8.05133 6.64509 9.00516 6.25 9.99972 6.25C10.9943 6.25 11.9481 6.64509 12.6514 7.34835C13.3546 8.05161 13.7497 9.00544 13.7497 10C13.7497 10.9946 13.3546 11.9484 12.6514 12.6516C11.9481 13.3549 10.9943 13.75 9.99972 13.75ZM9.99972 12.0833C10.5523 12.0833 11.0822 11.8638 11.4729 11.4731C11.8636 11.0824 12.0831 10.5525 12.0831 10C12.0831 9.44747 11.8636 8.91756 11.4729 8.52686C11.0822 8.13616 10.5523 7.91667 9.99972 7.91667C9.44719 7.91667 8.91728 8.13616 8.52658 8.52686C8.13588 8.91756 7.91639 9.44747 7.91639 10C7.91639 10.5525 8.13588 11.0824 8.52658 11.4731C8.91728 11.8638 9.44719 12.0833 9.99972 12.0833Z" fill="white"/>
+            </svg>
+                        </a>
+                        <button type="button" class="bg-red-500 text-white text-sm px-2 py-2 rounded-lg shadow hover:bg-red-600" title="Delete" onclick="showDeleteModal(${item.id})">
+                            <svg width="20" height="21" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                <path d="M14.167 5.50002H18.3337V7.16669H16.667V18C16.667 18.221 16.5792 18.433 16.4229 18.5893C16.2666 18.7456 16.0547 18.8334 15.8337 18.8334H4.16699C3.94598 18.8334 3.73402 18.7456 3.57774 18.5893C3.42146 18.433 3.33366 18.221 3.33366 18V7.16669H1.66699V5.50002H5.83366V3.00002C5.83366 2.77901 5.92146 2.56704 6.07774 2.41076C6.23402 2.25448 6.44598 2.16669 6.66699 2.16669H13.3337C13.5547 2.16669 13.7666 2.25448 13.9229 2.41076C14.0792 2.56704 14.167 2.77901 14.167 3.00002V5.50002ZM15.0003 7.16669H5.0003V17.1667H15.0003V7.16669ZM7.5003 3.83335V5.50002H12.5003V3.83335H7.5003Z" fill="white"/>
+                            </svg>
+                        </button>
+                    </td>
+                `;
+                tbody.appendChild(row);
+            });
+
+            renderPagination(data);
+        }
+
+        function updatePaginationInfo(responseData) {
+            const data = responseData.data;
+
+            const start = ((data.current_page - 1) * data.per_page) + 1;
+            const end = Math.min(data.current_page * data.per_page, data.total);
+            const total = data.total;
+
+            document.getElementById('pagination-info').textContent =
+                `Showing ${start} to ${end} of ${total} results`;
+        }
+
+        function renderPagination(data) {
+            const currentPage = data.data.current_page;
+            const lastPage = data.data.last_page;
+            const links = data.data.links;
+
+            let paginationHTML = '<nav class="isolate inline-flex -space-x-px rounded-md shadow-xs" aria-label="Pagination">';
+
+            paginationHTML += `
+                <span onclick="${currentPage === 1 ? '' : `fetchDrugs(${currentPage - 1})`}"
+                    class="relative inline-flex items-center px-4 py-2 text-sm font-medium
+                    ${currentPage === 1 ? 'text-gray-300 cursor-not-allowed' : 'text-gray-500 cursor-pointer hover:bg-gray-50'}
+                    bg-white border border-gray-300 rounded-l-md leading-5">
+                    &lsaquo;
+                </span>
+            `;
+
+            links.forEach((link, index) => {
+                if (index === 0 || index === links.length - 1) return;
+                paginationHTML += `
+                    <span onclick="fetchDrugs(${link.label})"
+                        class="relative inline-flex items-center px-4 py-2 -ml-px text-sm font-medium
+                        ${link.active ? 'bg-blue-500 text-white' : 'bg-white text-gray-700 hover:bg-gray-50'}
+                        border border-gray-300 leading-5">
+                        ${link.label}
+                    </span>
+                `;
+            });
+
+            paginationHTML += `
+                <span onclick="${currentPage === lastPage ? '' : `fetchDrugs(${currentPage + 1})`}"
+                    class="relative inline-flex items-center px-4 py-2 -ml-px text-sm font-medium
+                    ${currentPage === lastPage ? 'text-gray-300 cursor-not-allowed' : 'text-gray-500 cursor-pointer hover:bg-gray-50'}
+                    bg-white border border-gray-300 rounded-r-md leading-5">
+                    &rsaquo;
+                </span>
+            `;
+
+            paginationHTML += '</nav>';
+            document.getElementById("pagination-div").innerHTML = paginationHTML;
+        }
+
+        window.showDeleteModal = function (id) {
+            selectedId = id;
+            document.getElementById('delete-drug-form').action = `/master/drug/${id}`;
+            document.getElementById('deleteModal').classList.remove('hidden');
+        };
+
+        window.closeDeleteModal = function () {
+            selectedId = null;
+            document.getElementById('deleteModal').classList.add('hidden');
+        };
+    });
 </script>
 @endsection

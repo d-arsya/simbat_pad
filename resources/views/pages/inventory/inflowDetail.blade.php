@@ -11,28 +11,39 @@
     <div class="rounded-lg bg-white p-6 shadow-lg">
         <div class="mb-4 flex items-center">
             <div class="flex-1 mr-5">
-                <h2 class="text-xl font-bold text-left">{{ App\Models\Profile::first()->name }}</h2>
+                {{--  <h2 class="text-xl font-bold text-left">{{ App\Models\Profile::first()->name }}</h2>
                 <h2 class="text-sm text-left">{{ App\Models\Profile::first()->address }}</h2>
-                <h2 class="text-sm text-left">{{ App\Models\Profile::first()->phone }}</h2>
+                <h2 class="text-sm text-left">{{ App\Models\Profile::first()->phone }}</h2>  --}}
+                <h2 id="profile-name" class="text-xl font-bold text-left"></h2>
+                <h2 id="profile-address" class="text-sm text-left"></h2>
+                <h2 id="profile-phone" class="text-sm text-left"></h2>
             </div>
             <div class="flex-[1.5] flex flex-col  items-center justify-center">
                 <div class="flex items-center">
                     <span class="mr-2 font-normal text-black">No. LPB :</span>
-                    <span>{{ $transaction->code }}</span>
+                    {{--  <span>{{ $transaction->code }}</span>  --}}
+                    <span id="no-lbp"></span>
                 </div>
-                <h1 class="text-center text-2xl font-bold">
+                {{--  <h1 class="text-center text-2xl font-bold">
                     @if($transaction->variant === 'LPK')
                         LAPORAN PENERIMAAN KLINIK
                     @else
                         LAPORAN PENERIMAAN BARANG
                     @endif
-                </h1>
+                </h1>  --}}
+                <h1 class="text-center text-2xl font-bold">LAPORAN PENERIMAAN BARANG</h1>
             </div>
             <div class="flex-1 ml-10">
-                <p class="text-sm mb-4 text-left">Tanggal: {{ Carbon::parse($transaction->created_at)->translatedFormat('j F Y') }}</p>
-                <h2 class="text-lg font-bold text-left">{{ $transaction->vendor()->name }}</h2>
+                {{--  <p class="text-sm mb-4 text-left">Tanggal: {{ Carbon::parse($transaction->created_at)->translatedFormat('j F Y') }}</p>  --}}
+                <p class="text-sm mb-4 text-left">Tanggal:
+                    <span id="date"></span>
+                </p>
+                {{--  <h2 class="text-lg font-bold text-left">{{ $transaction->vendor()->name }}</h2>
                 <h2 class="text-sm text-left">{{ $transaction->vendor()->address }}</h2>
-                <h2 class="text-sm text-left">{{ $transaction->vendor()->phone }}</h2>
+                <h2 class="text-sm text-left">{{ $transaction->vendor()->phone }}</h2>  --}}
+                <h2 id="vendor-name" class="text-lg font-bold text-left"></h2>
+                <h2 id="vendor-address" class="text-sm text-left"></h2>
+                <h2 id="vendor-phone" class="text-sm text-left"></h2>
             </div>
         </div>
         <div class="overflow-hidden rounded-lg bg-white shadow-md mt-8">
@@ -47,7 +58,7 @@
                         <th class="border p-2">Subtotal</th>
                     </tr>
                 </thead>
-                <tbody class="text-gray-700">
+                {{--  <tbody class="text-gray-700">
                     @foreach ($details as $number=>$item)
                     <tr class="border-b border-gray-200 hover:bg-gray-100">
                         <td class="px-6 py-3 text-center">{{ $number+1 }}</td>
@@ -59,9 +70,11 @@
                     </tr>
 
                     @endforeach
-                </tbody>
+                </tbody>  --}}
+                <tbody id="tabel" class="text-gray-700">
             </table>
-            <h2 type="text" class="text-right mt-6 pe-6 pb-6">Grand total : {{ 'Rp ' . number_format($transaction->outcome, 0, ',', '.') }}</h2>
+            {{--  <h2 type="text" class="text-right mt-6 pe-6 pb-6">Grand total : {{ 'Rp ' . number_format($transaction->outcome, 0, ',', '.') }}</h2>  --}}
+            <h2 type="text" class="text-right mt-6 pe-6 pb-6">Grand total : Rp <span id="grand-total"></span></h2>
         </div>
     </div>
     <div id="uploadModal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 hidden">
@@ -92,11 +105,78 @@
         </div>
     </div>
 
-    <script>
-            function uploadModal() {
+    <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
+   <script>
+    document.addEventListener('DOMContentLoaded', function () {
+        const token = window.API_TOKEN;
+        const API_BASE_URL = '/api/v1';
+
+        if (!token) {
+            console.error('API token not found');
+            return;
+        }
+
+        console.log('Token found:', token);
+
+        const urlParts = window.location.pathname.split('/');
+        const id = urlParts[urlParts.length - 1]; // Get ID from URL
+
+        fetchInflowDetails(id);
+
+        function fetchInflowDetails(id) {
+            axios.get(`${API_BASE_URL}/inventory/inflows/${id}`, {
+                headers: {
+                    'Authorization': `Bearer ${token}`
+                }
+            })
+            .then(response => {
+                console.log('Response data:', response.data);
+                const data = response.data.data;
+
+                // Populate profile information
+                document.getElementById('profile-name').textContent = data.Profile.name;
+                document.getElementById('profile-address').textContent = data.Profile.address;
+                document.getElementById('profile-phone').textContent = data.Profile.phone;
+                document.getElementById('no-lbp').textContent = data["No. LPB"];
+                document.getElementById('date').textContent = data["Date"];
+                document.getElementById('vendor-name').textContent = data.Vendor.name;
+                document.getElementById('vendor-address').textContent = data.Vendor.address;
+                document.getElementById('vendor-phone').textContent = data.Vendor.phone;
+
+                // Populate details table
+                const tbodyEl = document.getElementById('tabel');
+                tbodyEl.innerHTML = ''; // Clear existing content
+
+                data.Details.forEach((item, index) => {
+                    const tr = document.createElement('tr');
+                    tr.classList.add('border-b', 'border-gray-200', 'hover:bg-gray-100');
+                    console.log(item);
+
+                    tr.innerHTML = `
+                        <td class="px-6 py-3 text-center">${index + 1}</td>
+                        <td class="px-6 py-3 text-center">${item.drug_code}</td>
+                        <td class="px-6 py-3 text-center">${item.drug_name}</td>
+                        <td class="px-6 py-3 text-center">${item.total}</td>
+                        <td class="px-6 py-3 text-center">Rp ${item.piece_price}</td>
+                        <td class="px-6 py-3 text-center">Rp ${item.subtotal}</td>
+                    `;
+
+                    tbodyEl.appendChild(tr);
+                });
+
+                document.getElementById('grand-total').textContent = data.Grand_total;
+            })
+            .catch(error => {
+                console.error('Failed to fetch inflow details:', error);
+            });
+        }
+
+        // Modal functions
+        window.uploadModal = function() {
             document.getElementById('uploadModal').classList.remove('hidden');
-        }
-        function closeUploadModal(transaction_id) {
+        };
+
+        window.closeUploadModal = function(transaction_id) {
             document.getElementById('uploadModal').classList.add('hidden');
 
             if (!transaction_id) {
@@ -104,13 +184,11 @@
                 return;
             }
 
-            console.log("Download button clicked, transaction ID:", transaction_id); // Debugging
-
-            // Redirect langsung ke endpoint Laravel
+            console.log("Download button clicked, transaction ID:", transaction_id);
             window.location.href = `/inventory/export/${transaction_id}`;
-        }
+        };
 
-        function submitModal(transaction_id) {
+        window.submitModal = function(transaction_id) {
             document.getElementById('uploadModal').classList.add('hidden');
 
             if (!transaction_id) {
@@ -118,24 +196,9 @@
                 return;
             }
 
-            console.log("Download button clicked, transaction ID:", transaction_id); // Debugging
-
-            // Redirect langsung ke endpoint Laravel
+            console.log("Download button clicked, transaction ID:", transaction_id);
             window.location.href = `/inventory/generate-pdf/${transaction_id}`;
-        }
-
-
-        document.getElementById('printButton').onclick = function () {
-            document.getElementById('printOptions').classList.toggle('invisible');
         };
-        document.getElementById('confirmPrint').onclick = function () {
-            const format = document.getElementById('format').value;
-            if (format === 'pdf') {
-                alert('Mencetak dalam format PDF...');
-            } else if (format === 'excel') {
-                alert('Mencetak dalam format Excel...');
-            }
-            document.getElementById('printOptions').classList.add('invisible');
-        };
-    </script>
+    });
+</script>
 @endsection

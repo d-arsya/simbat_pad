@@ -10,7 +10,7 @@
     },
     "servers": [
         {
-            "url": "http://localhost/api",
+            "url": "https://simbat.madanateknologi.web.id//api",
             "description": "API Server"
         }
     ],
@@ -801,13 +801,13 @@
                 ]
             }
         },
-        "/api/v1/checkout/available-drugs": {
+        "/api/v1/checkout/drugs": {
             "get": {
                 "tags": [
                     "Checkout"
                 ],
                 "summary": "Get available drugs for checkout",
-                "operationId": "b43cb330a820ad6d4b917ca3e13d87b0",
+                "operationId": "d0d79a78e96bb579de91e6c73014e422",
                 "parameters": [
                     {
                         "name": "source",
@@ -873,7 +873,12 @@
                     "500": {
                         "description": "Server error"
                     }
-                }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
             }
         },
         "/api/v1/checkout": {
@@ -1009,7 +1014,12 @@
                     "500": {
                         "description": "Server error"
                     }
-                }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
             }
         },
         "/api/v1/checkout/history": {
@@ -1065,7 +1075,12 @@
                             }
                         }
                     }
-                }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
             }
         },
         "/api/v1/dashboard/obat": {
@@ -1115,7 +1130,12 @@
                     "500": {
                         "description": "Server error"
                     }
-                }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
             }
         },
         "/api/v1/dashboard/penjualan": {
@@ -1203,7 +1223,12 @@
                     "500": {
                         "description": "Server error"
                     }
-                }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
             }
         },
         "/api/v1/dashboard/histories": {
@@ -1275,7 +1300,12 @@
                     "500": {
                         "description": "Server error"
                     }
-                }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
             }
         },
         "/api/v1/dashboard/due-bills": {
@@ -1330,7 +1360,12 @@
                     "500": {
                         "description": "Server error"
                     }
-                }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
             }
         },
         "/api/v1/dashboard/low-stock": {
@@ -1417,7 +1452,12 @@
                     "500": {
                         "description": "Server error"
                     }
-                }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
             }
         },
         "/api/v1/dashboard/expiring": {
@@ -1468,7 +1508,12 @@
                     "500": {
                         "description": "Server error"
                     }
-                }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
             }
         },
         "/api/v1/drugs": {
@@ -2117,7 +2162,12 @@
                             }
                         }
                     }
-                }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
             },
             "post": {
                 "tags": [
@@ -2226,7 +2276,12 @@
                     "500": {
                         "description": "Failed to create inflow"
                     }
-                }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
             }
         },
         "/api/v1/inventory/inflows/{id}": {
@@ -2322,7 +2377,12 @@
                     "404": {
                         "description": "Inflow not found"
                     }
-                }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
             }
         },
         "/api/v1/inventory/vendors": {
@@ -2362,7 +2422,12 @@
                     "500": {
                         "description": "Failed to get vendors"
                     }
-                }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
             }
         },
         "/api/v1/inventory/drugs": {
@@ -2402,7 +2467,12 @@
                     "500": {
                         "description": "Failed to get drugs"
                     }
-                }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
             }
         },
         "/api/v1/inventory/stocks": {
@@ -2450,7 +2520,12 @@
                             }
                         }
                     }
-                }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
             }
         },
         "/api/v1/inventory/stocks/{id}": {
@@ -2498,7 +2573,12 @@
                     "404": {
                         "description": "Stock not found"
                     }
-                }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
             }
         },
         "/api/v1/inventory/stocks/search": {
@@ -2542,16 +2622,21 @@
                             }
                         }
                     }
-                }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
             }
         },
-        "/api/v1/inventory/clinic-stocks": {
+        "/api/v1/inventory/clinic/stocks": {
             "get": {
                 "tags": [
                     "Inventory"
                 ],
                 "summary": "Get all clinic stocks",
-                "operationId": "0192a379f206890162c73cd657647ec0",
+                "operationId": "a3615e5eb6898f3fbcd58e1209a3a554",
                 "parameters": [
                     {
                         "name": "per_page",
@@ -2590,7 +2675,12 @@
                             }
                         }
                     }
-                }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
             }
         },
         "/api/v1/inventory/clinic-stocks/{id}": {
@@ -2638,7 +2728,12 @@
                     "404": {
                         "description": "Clinic stock not found"
                     }
-                }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
             }
         },
         "/api/v1/inventory/clinic-stocks/search": {
@@ -2682,7 +2777,12 @@
                             }
                         }
                     }
-                }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
             }
         },
         "/api/v1/inventory/transfer-to-clinic": {
@@ -2747,7 +2847,12 @@
                     "500": {
                         "description": "Failed to transfer stock"
                     }
-                }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
             }
         },
         "/api/v1/management/search": {
@@ -2805,7 +2910,12 @@
                             }
                         }
                     }
-                }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
             }
         },
         "/api/v1/management/bills": {
@@ -2922,7 +3032,12 @@
                             }
                         }
                     }
-                }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
             }
         },
         "/api/v1/management/bills/{id}": {
@@ -3075,7 +3190,12 @@
                     "404": {
                         "description": "Bill not found"
                     }
-                }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
             }
         },
         "/api/v1/management/bills/{id}/pay": {
@@ -3126,7 +3246,12 @@
                     "500": {
                         "description": "Failed to pay bill"
                     }
-                }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
             }
         },
         "/api/v1/management/returns": {
@@ -3241,7 +3366,12 @@
                             }
                         }
                     }
-                }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
             },
             "post": {
                 "tags": [
@@ -3316,7 +3446,12 @@
                     "500": {
                         "description": "Failed to create return"
                     }
-                }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
             }
         },
         "/api/v1/management/returns/{id}": {
@@ -3445,7 +3580,12 @@
                     "404": {
                         "description": "Return not found"
                     }
-                }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
             }
         },
         "/api/v1/management/returns/{id}/complete": {
@@ -3516,7 +3656,12 @@
                     "500": {
                         "description": "Failed to complete return"
                     }
-                }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
             }
         },
         "/api/v1/management/trash": {
@@ -3622,7 +3767,12 @@
                             }
                         }
                     }
-                }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
             },
             "post": {
                 "tags": [
@@ -3698,7 +3848,12 @@
                     "500": {
                         "description": "Failed to create trash record"
                     }
-                }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
             }
         },
         "/api/v1/management/trash/{id}": {
@@ -3796,7 +3951,12 @@
                     "404": {
                         "description": "Trash record not found"
                     }
-                }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
             }
         },
         "/api/v1/manufactures": {
@@ -3886,7 +4046,12 @@
                             }
                         }
                     }
-                }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
             },
             "post": {
                 "tags": [
@@ -3988,7 +4153,12 @@
                             }
                         }
                     }
-                }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
             }
         },
         "/api/v1/manufactures/{id}": {
@@ -4054,7 +4224,12 @@
                     "404": {
                         "description": "Manufacturer not found"
                     }
-                }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
             },
             "put": {
                 "tags": [
@@ -4142,7 +4317,12 @@
                     "404": {
                         "description": "Manufacturer not found"
                     }
-                }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
             },
             "delete": {
                 "tags": [
@@ -4203,7 +4383,12 @@
                     "404": {
                         "description": "Manufacturer not found"
                     }
-                }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
             }
         },
         "/api/v1/manufactures/search": {
@@ -4263,7 +4448,12 @@
                             }
                         }
                     }
-                }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
             }
         },
         "/api/v1/repacks": {
@@ -4368,7 +4558,12 @@
                             }
                         }
                     }
-                }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
             },
             "post": {
                 "tags": [
@@ -4467,7 +4662,12 @@
                     "422": {
                         "description": "Validation error or drug has no price set"
                     }
-                }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
             }
         },
         "/api/v1/repacks/{id}": {
@@ -4539,7 +4739,12 @@
                     "404": {
                         "description": "Repack not found"
                     }
-                }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
             },
             "put": {
                 "tags": [
@@ -4632,7 +4837,12 @@
                     "404": {
                         "description": "Repack not found"
                     }
-                }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
             },
             "delete": {
                 "tags": [
@@ -4699,7 +4909,12 @@
                     "404": {
                         "description": "Repack not found"
                     }
-                }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
             }
         },
         "/api/v1/repacks/search": {
@@ -4771,7 +4986,12 @@
                             }
                         }
                     }
-                }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
             }
         },
         "/api/v1/reports/drugs": {
@@ -4841,7 +5061,12 @@
                             }
                         }
                     }
-                }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
             }
         },
         "/api/v1/reports/drugs/{id}": {
@@ -5003,7 +5228,12 @@
                     "404": {
                         "description": "Drug not found"
                     }
-                }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
             }
         },
         "/api/v1/reports/transactions": {
@@ -5089,7 +5319,12 @@
                             }
                         }
                     }
-                }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
             }
         },
         "/api/v1/reports/transactions/search": {
@@ -5153,693 +5388,12 @@
                             }
                         }
                     }
-                }
-            }
-        },
-        "/api/v1/transactions": {
-            "get": {
-                "tags": [
-                    "Transactions"
-                ],
-                "summary": "Get all transactions",
-                "operationId": "0ffe6bf7980513c9d322e1ba4d400ff2",
-                "parameters": [
-                    {
-                        "name": "search",
-                        "in": "query",
-                        "description": "Search term for transaction code or customer name",
-                        "schema": {
-                            "type": "string"
-                        }
-                    },
-                    {
-                        "name": "start_date",
-                        "in": "query",
-                        "description": "Start date for filtering transactions",
-                        "schema": {
-                            "type": "string",
-                            "format": "date"
-                        }
-                    },
-                    {
-                        "name": "end_date",
-                        "in": "query",
-                        "description": "End date for filtering transactions",
-                        "schema": {
-                            "type": "string",
-                            "format": "date"
-                        }
-                    },
-                    {
-                        "name": "status",
-                        "in": "query",
-                        "description": "Filter transactions by status",
-                        "schema": {
-                            "type": "string",
-                            "enum": [
-                                "completed",
-                                "cancelled"
-                            ]
-                        }
-                    },
-                    {
-                        "name": "per_page",
-                        "in": "query",
-                        "description": "Number of items per page",
-                        "schema": {
-                            "type": "integer",
-                            "default": 15
-                        }
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "Transactions retrieved successfully",
-                        "content": {
-                            "application/json": {
-                                "schema": {
-                                    "properties": {
-                                        "status": {
-                                            "type": "string",
-                                            "example": "success"
-                                        },
-                                        "message": {
-                                            "type": "string",
-                                            "example": "Transactions retrieved successfully"
-                                        },
-                                        "data": {
-                                            "properties": {
-                                                "current_page": {
-                                                    "type": "integer",
-                                                    "example": 1
-                                                },
-                                                "data": {
-                                                    "type": "array",
-                                                    "items": {
-                                                        "properties": {
-                                                            "id": {
-                                                                "type": "integer",
-                                                                "example": 1
-                                                            },
-                                                            "code": {
-                                                                "type": "string",
-                                                                "example": "TRX-1234567890"
-                                                            },
-                                                            "customer_name": {
-                                                                "type": "string",
-                                                                "example": "John Doe"
-                                                            },
-                                                            "customer_phone": {
-                                                                "type": "string",
-                                                                "example": "081234567890"
-                                                            },
-                                                            "subtotal": {
-                                                                "type": "number",
-                                                                "format": "float",
-                                                                "example": 100000
-                                                            },
-                                                            "discount": {
-                                                                "type": "number",
-                                                                "format": "float",
-                                                                "example": 5000
-                                                            },
-                                                            "tax": {
-                                                                "type": "number",
-                                                                "format": "float",
-                                                                "example": 9500
-                                                            },
-                                                            "total": {
-                                                                "type": "number",
-                                                                "format": "float",
-                                                                "example": 104500
-                                                            },
-                                                            "status": {
-                                                                "type": "string",
-                                                                "example": "completed"
-                                                            },
-                                                            "created_at": {
-                                                                "type": "string",
-                                                                "format": "date-time"
-                                                            }
-                                                        },
-                                                        "type": "object"
-                                                    }
-                                                },
-                                                "total": {
-                                                    "type": "integer",
-                                                    "example": 50
-                                                }
-                                            },
-                                            "type": "object"
-                                        }
-                                    },
-                                    "type": "object"
-                                }
-                            }
-                        }
-                    }
-                }
-            },
-            "post": {
-                "tags": [
-                    "Transactions"
-                ],
-                "summary": "Create a new transaction",
-                "operationId": "b0ee1d82e907b370897f7c2adde8a664",
-                "requestBody": {
-                    "required": true,
-                    "content": {
-                        "application/json": {
-                            "schema": {
-                                "required": [
-                                    "customer_name",
-                                    "items",
-                                    "payment_method"
-                                ],
-                                "properties": {
-                                    "customer_id": {
-                                        "type": "integer",
-                                        "example": 1,
-                                        "nullable": true
-                                    },
-                                    "customer_name": {
-                                        "type": "string",
-                                        "maxLength": 255,
-                                        "example": "John Doe"
-                                    },
-                                    "customer_phone": {
-                                        "type": "string",
-                                        "maxLength": 20,
-                                        "example": "081234567890",
-                                        "nullable": true
-                                    },
-                                    "customer_address": {
-                                        "type": "string",
-                                        "example": "123 Main St",
-                                        "nullable": true
-                                    },
-                                    "items": {
-                                        "type": "array",
-                                        "items": {
-                                            "properties": {
-                                                "item_id": {
-                                                    "type": "integer",
-                                                    "example": 1
-                                                },
-                                                "item_type": {
-                                                    "type": "string",
-                                                    "enum": [
-                                                        "drug",
-                                                        "repack"
-                                                    ],
-                                                    "example": "drug"
-                                                },
-                                                "quantity": {
-                                                    "type": "integer",
-                                                    "minimum": 1,
-                                                    "example": 2
-                                                },
-                                                "price": {
-                                                    "type": "number",
-                                                    "format": "float",
-                                                    "minimum": 0,
-                                                    "example": 50000
-                                                }
-                                            },
-                                            "type": "object"
-                                        }
-                                    },
-                                    "discount_type": {
-                                        "type": "string",
-                                        "enum": [
-                                            "percentage",
-                                            "fixed"
-                                        ],
-                                        "example": "percentage",
-                                        "nullable": true
-                                    },
-                                    "discount_amount": {
-                                        "type": "number",
-                                        "format": "float",
-                                        "minimum": 0,
-                                        "example": 10,
-                                        "nullable": true
-                                    },
-                                    "tax_rate": {
-                                        "type": "number",
-                                        "format": "float",
-                                        "maximum": 100,
-                                        "minimum": 0,
-                                        "example": 10,
-                                        "nullable": true
-                                    },
-                                    "payment_method": {
-                                        "type": "string",
-                                        "maxLength": 50,
-                                        "example": "cash"
-                                    },
-                                    "notes": {
-                                        "type": "string",
-                                        "example": "Additional notes",
-                                        "nullable": true
-                                    }
-                                },
-                                "type": "object"
-                            }
-                        }
-                    }
                 },
-                "responses": {
-                    "201": {
-                        "description": "Transaction created successfully",
-                        "content": {
-                            "application/json": {
-                                "schema": {
-                                    "properties": {
-                                        "status": {
-                                            "type": "string",
-                                            "example": "success"
-                                        },
-                                        "message": {
-                                            "type": "string",
-                                            "example": "Transaction created successfully"
-                                        },
-                                        "data": {
-                                            "properties": {
-                                                "id": {
-                                                    "type": "integer",
-                                                    "example": 1
-                                                },
-                                                "code": {
-                                                    "type": "string",
-                                                    "example": "TRX-1234567890"
-                                                },
-                                                "customer_name": {
-                                                    "type": "string",
-                                                    "example": "John Doe"
-                                                },
-                                                "subtotal": {
-                                                    "type": "number",
-                                                    "format": "float",
-                                                    "example": 100000
-                                                },
-                                                "discount": {
-                                                    "type": "number",
-                                                    "format": "float",
-                                                    "example": 5000
-                                                },
-                                                "tax": {
-                                                    "type": "number",
-                                                    "format": "float",
-                                                    "example": 9500
-                                                },
-                                                "total": {
-                                                    "type": "number",
-                                                    "format": "float",
-                                                    "example": 104500
-                                                },
-                                                "status": {
-                                                    "type": "string",
-                                                    "example": "completed"
-                                                },
-                                                "details": {
-                                                    "type": "array",
-                                                    "items": {
-                                                        "type": "object"
-                                                    }
-                                                },
-                                                "created_at": {
-                                                    "type": "string",
-                                                    "format": "date-time"
-                                                }
-                                            },
-                                            "type": "object"
-                                        }
-                                    },
-                                    "type": "object"
-                                }
-                            }
-                        }
-                    },
-                    "422": {
-                        "description": "Validation error",
-                        "content": {
-                            "application/json": {
-                                "schema": {
-                                    "properties": {
-                                        "status": {
-                                            "type": "string",
-                                            "example": "error"
-                                        },
-                                        "message": {
-                                            "type": "string",
-                                            "example": "Validation error"
-                                        },
-                                        "errors": {
-                                            "type": "object"
-                                        }
-                                    },
-                                    "type": "object"
-                                }
-                            }
-                        }
-                    },
-                    "500": {
-                        "description": "Server error",
-                        "content": {
-                            "application/json": {
-                                "schema": {
-                                    "properties": {
-                                        "status": {
-                                            "type": "string",
-                                            "example": "error"
-                                        },
-                                        "message": {
-                                            "type": "string",
-                                            "example": "Failed to create transaction"
-                                        }
-                                    },
-                                    "type": "object"
-                                }
-                            }
-                        }
-                    }
-                }
-            }
-        },
-        "/api/v1/transactions/{transaction}": {
-            "get": {
-                "tags": [
-                    "Transactions"
-                ],
-                "summary": "Get transaction details",
-                "operationId": "5bed183e7d3c493a05648286c650251a",
-                "parameters": [
+                "security": [
                     {
-                        "name": "transaction",
-                        "in": "path",
-                        "description": "Transaction ID",
-                        "required": true,
-                        "schema": {
-                            "type": "integer"
-                        }
+                        "bearerAuth": []
                     }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "Transaction details retrieved successfully",
-                        "content": {
-                            "application/json": {
-                                "schema": {
-                                    "properties": {
-                                        "status": {
-                                            "type": "string",
-                                            "example": "success"
-                                        },
-                                        "message": {
-                                            "type": "string",
-                                            "example": "Transaction retrieved successfully"
-                                        },
-                                        "data": {
-                                            "properties": {
-                                                "id": {
-                                                    "type": "integer",
-                                                    "example": 1
-                                                },
-                                                "code": {
-                                                    "type": "string",
-                                                    "example": "TRX-1234567890"
-                                                },
-                                                "customer_name": {
-                                                    "type": "string",
-                                                    "example": "John Doe"
-                                                },
-                                                "customer_phone": {
-                                                    "type": "string",
-                                                    "example": "081234567890"
-                                                },
-                                                "customer_address": {
-                                                    "type": "string",
-                                                    "example": "123 Main St"
-                                                },
-                                                "subtotal": {
-                                                    "type": "number",
-                                                    "format": "float",
-                                                    "example": 100000
-                                                },
-                                                "discount": {
-                                                    "type": "number",
-                                                    "format": "float",
-                                                    "example": 5000
-                                                },
-                                                "tax": {
-                                                    "type": "number",
-                                                    "format": "float",
-                                                    "example": 9500
-                                                },
-                                                "total": {
-                                                    "type": "number",
-                                                    "format": "float",
-                                                    "example": 104500
-                                                },
-                                                "status": {
-                                                    "type": "string",
-                                                    "example": "completed"
-                                                },
-                                                "details": {
-                                                    "type": "array",
-                                                    "items": {
-                                                        "type": "object"
-                                                    }
-                                                },
-                                                "created_at": {
-                                                    "type": "string",
-                                                    "format": "date-time"
-                                                }
-                                            },
-                                            "type": "object"
-                                        }
-                                    },
-                                    "type": "object"
-                                }
-                            }
-                        }
-                    },
-                    "404": {
-                        "description": "Transaction not found"
-                    }
-                }
-            }
-        },
-        "/api/v1/transactions/{transaction}/cancel": {
-            "post": {
-                "tags": [
-                    "Transactions"
-                ],
-                "summary": "Cancel a transaction",
-                "operationId": "e29bf24196adf66e9dfd047e963fa2e7",
-                "parameters": [
-                    {
-                        "name": "transaction",
-                        "in": "path",
-                        "description": "Transaction ID",
-                        "required": true,
-                        "schema": {
-                            "type": "integer"
-                        }
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "Transaction cancelled successfully",
-                        "content": {
-                            "application/json": {
-                                "schema": {
-                                    "properties": {
-                                        "status": {
-                                            "type": "string",
-                                            "example": "success"
-                                        },
-                                        "message": {
-                                            "type": "string",
-                                            "example": "Transaction cancelled successfully"
-                                        },
-                                        "data": {
-                                            "properties": {
-                                                "id": {
-                                                    "type": "integer",
-                                                    "example": 1
-                                                },
-                                                "code": {
-                                                    "type": "string",
-                                                    "example": "TRX-1234567890"
-                                                },
-                                                "status": {
-                                                    "type": "string",
-                                                    "example": "cancelled"
-                                                }
-                                            },
-                                            "type": "object"
-                                        }
-                                    },
-                                    "type": "object"
-                                }
-                            }
-                        }
-                    },
-                    "400": {
-                        "description": "Transaction is already cancelled",
-                        "content": {
-                            "application/json": {
-                                "schema": {
-                                    "properties": {
-                                        "status": {
-                                            "type": "string",
-                                            "example": "error"
-                                        },
-                                        "message": {
-                                            "type": "string",
-                                            "example": "Transaction is already cancelled"
-                                        }
-                                    },
-                                    "type": "object"
-                                }
-                            }
-                        }
-                    },
-                    "404": {
-                        "description": "Transaction not found"
-                    },
-                    "500": {
-                        "description": "Server error",
-                        "content": {
-                            "application/json": {
-                                "schema": {
-                                    "properties": {
-                                        "status": {
-                                            "type": "string",
-                                            "example": "error"
-                                        },
-                                        "message": {
-                                            "type": "string",
-                                            "example": "Failed to cancel transaction"
-                                        }
-                                    },
-                                    "type": "object"
-                                }
-                            }
-                        }
-                    }
-                }
-            }
-        },
-        "/api/v1/transactions/summary": {
-            "get": {
-                "tags": [
-                    "Transactions"
-                ],
-                "summary": "Get transaction summary for a period",
-                "operationId": "a3e1e6f3016e67ec8ba3321b708514b0",
-                "parameters": [
-                    {
-                        "name": "start_date",
-                        "in": "query",
-                        "description": "Start date for summary",
-                        "required": true,
-                        "schema": {
-                            "type": "string",
-                            "format": "date"
-                        }
-                    },
-                    {
-                        "name": "end_date",
-                        "in": "query",
-                        "description": "End date for summary",
-                        "required": true,
-                        "schema": {
-                            "type": "string",
-                            "format": "date"
-                        }
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "Transaction summary retrieved successfully",
-                        "content": {
-                            "application/json": {
-                                "schema": {
-                                    "properties": {
-                                        "status": {
-                                            "type": "string",
-                                            "example": "success"
-                                        },
-                                        "message": {
-                                            "type": "string",
-                                            "example": "Transaction summary retrieved successfully"
-                                        },
-                                        "data": {
-                                            "properties": {
-                                                "total_transactions": {
-                                                    "type": "integer",
-                                                    "example": 100
-                                                },
-                                                "total_subtotal": {
-                                                    "type": "number",
-                                                    "format": "float",
-                                                    "example": 10000000
-                                                },
-                                                "total_discount": {
-                                                    "type": "number",
-                                                    "format": "float",
-                                                    "example": 500000
-                                                },
-                                                "total_tax": {
-                                                    "type": "number",
-                                                    "format": "float",
-                                                    "example": 950000
-                                                },
-                                                "total_amount": {
-                                                    "type": "number",
-                                                    "format": "float",
-                                                    "example": 10450000
-                                                },
-                                                "total_customers": {
-                                                    "type": "integer",
-                                                    "example": 50
-                                                }
-                                            },
-                                            "type": "object"
-                                        }
-                                    },
-                                    "type": "object"
-                                }
-                            }
-                        }
-                    },
-                    "422": {
-                        "description": "Validation error",
-                        "content": {
-                            "application/json": {
-                                "schema": {
-                                    "properties": {
-                                        "status": {
-                                            "type": "string",
-                                            "example": "error"
-                                        },
-                                        "message": {
-                                            "type": "string",
-                                            "example": "Validation error"
-                                        },
-                                        "errors": {
-                                            "type": "object"
-                                        }
-                                    },
-                                    "type": "object"
-                                }
-                            }
-                        }
-                    }
-                }
+                ]
             }
         },
         "/api/v1/transactions/top-selling": {
@@ -5901,26 +5455,99 @@
                                             "type": "array",
                                             "items": {
                                                 "properties": {
-                                                    "item_id": {
+                                                    "drug_id": {
                                                         "type": "integer",
                                                         "example": 1
                                                     },
-                                                    "item_type": {
+                                                    "name": {
                                                         "type": "string",
-                                                        "enum": [
-                                                            "drug",
-                                                            "repack"
-                                                        ],
-                                                        "example": "drug"
+                                                        "example": "Paracetamol 500mg"
                                                     },
                                                     "total_quantity": {
-                                                        "type": "integer",
-                                                        "example": 100
+                                                        "type": "number",
+                                                        "format": "float",
+                                                        "example": 80
                                                     },
                                                     "total_amount": {
                                                         "type": "number",
                                                         "format": "float",
-                                                        "example": 5000000
+                                                        "example": 400000
+                                                    },
+                                                    "drug": {
+                                                        "properties": {
+                                                            "id": {
+                                                                "type": "integer",
+                                                                "example": 1
+                                                            },
+                                                            "code": {
+                                                                "type": "string",
+                                                                "example": "PC0001"
+                                                            },
+                                                            "name": {
+                                                                "type": "string",
+                                                                "example": "Paracetamol 500mg"
+                                                            },
+                                                            "category": {
+                                                                "properties": {
+                                                                    "id": {
+                                                                        "type": "integer",
+                                                                        "example": 1
+                                                                    },
+                                                                    "name": {
+                                                                        "type": "string",
+                                                                        "example": "Analgesik"
+                                                                    },
+                                                                    "code": {
+                                                                        "type": "string",
+                                                                        "example": "AG"
+                                                                    }
+                                                                },
+                                                                "type": "object",
+                                                                "nullable": true
+                                                            },
+                                                            "manufacture": {
+                                                                "properties": {
+                                                                    "id": {
+                                                                        "type": "integer",
+                                                                        "example": 1
+                                                                    },
+                                                                    "name": {
+                                                                        "type": "string",
+                                                                        "example": "Kimia Farma"
+                                                                    }
+                                                                },
+                                                                "type": "object",
+                                                                "nullable": true
+                                                            },
+                                                            "variant": {
+                                                                "properties": {
+                                                                    "id": {
+                                                                        "type": "integer",
+                                                                        "example": 1
+                                                                    },
+                                                                    "name": {
+                                                                        "type": "string",
+                                                                        "example": "Tablet"
+                                                                    }
+                                                                },
+                                                                "type": "object",
+                                                                "nullable": true
+                                                            },
+                                                            "piece_netto": {
+                                                                "type": "integer",
+                                                                "example": 500
+                                                            },
+                                                            "piece_price": {
+                                                                "type": "integer",
+                                                                "example": 5000
+                                                            },
+                                                            "last_price": {
+                                                                "type": "integer",
+                                                                "example": 5000
+                                                            }
+                                                        },
+                                                        "type": "object",
+                                                        "nullable": true
                                                     }
                                                 },
                                                 "type": "object"
@@ -5955,7 +5582,12 @@
                             }
                         }
                     }
-                }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
             }
         },
         "/api/v1/users": {
@@ -6528,7 +6160,12 @@
                             }
                         }
                     }
-                }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
             },
             "post": {
                 "tags": [
@@ -6627,7 +6264,12 @@
                             }
                         }
                     }
-                }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
             }
         },
         "/api/v1/variants/{id}": {
@@ -6690,7 +6332,12 @@
                     "404": {
                         "description": "Variant not found"
                     }
-                }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
             },
             "put": {
                 "tags": [
@@ -6775,7 +6422,12 @@
                     "404": {
                         "description": "Variant not found"
                     }
-                }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
             },
             "delete": {
                 "tags": [
@@ -6833,7 +6485,12 @@
                     "404": {
                         "description": "Variant not found"
                     }
-                }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
             }
         },
         "/api/v1/variants/search": {
@@ -6890,7 +6547,12 @@
                             }
                         }
                     }
-                }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
             }
         },
         "/api/v1/vendors": {
@@ -6977,7 +6639,12 @@
                             }
                         }
                     }
-                }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
             },
             "post": {
                 "tags": [
@@ -7109,7 +6776,12 @@
                             }
                         }
                     }
-                }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
             }
         },
         "/api/v1/vendors/{vendor}": {
@@ -7181,7 +6853,12 @@
                     "404": {
                         "description": "Vendor not found"
                     }
-                }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
             },
             "put": {
                 "tags": [
@@ -7327,7 +7004,12 @@
                             }
                         }
                     }
-                }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
             },
             "delete": {
                 "tags": [
@@ -7431,7 +7113,12 @@
                             }
                         }
                     }
-                }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
             }
         },
         "/api/v1/vendors/search": {
@@ -7497,7 +7184,12 @@
                             }
                         }
                     }
-                }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
             }
         }
     },
