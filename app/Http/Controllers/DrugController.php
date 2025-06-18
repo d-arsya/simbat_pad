@@ -66,11 +66,50 @@ class DrugController extends Controller
             $category = Category::find($request->category_id);
             //membuat kode untuk obat yang dibuat
             $request["code"] = $this->generateCode($category);
-            $drug = Drug::create($request->all());
+            
+            $validate = $request->validate([
+                'category_id' => 'required|exists:categories,id',
+                'variant_id' => 'required|exists:variants,id',
+                'manufacture_id' => 'required|exists:manufactures,id',
+                'name' => 'required|string|min:3|max:255|unique:drugs,name',
+                'code' => 'unique:drugs,code',
+                'last_price' => 'nullable|integer|min:0',
+                'last_discount' => 'nullable|integer|min:0',
+                'maximum_capacity' => 'required|integer|min:1',
+                'minimum_capacity' => 'required|integer|min:0',
+                'pack_quantity' => 'required|integer|min:1',
+                'pack_margin' => 'required|integer|min:0',
+                'piece_quantity' => 'required|integer|min:1',
+                'piece_margin' => 'required|integer|min:0',
+                'piece_netto' => 'required|integer|min:1',
+                'piece_unit' => 'required|in:ml,mg,butir'
+            ], [
+                'name.unique' => 'Nama obat sudah ada',
+                'code.unique' => 'Kode obat sudah ada'
+            ]);
+            
+            $drug = Drug::create($validate);
             //membuat repack dan stok default untuk obat yang dibuat
             $drug->default_repacks();
             $drug->default_stock();
             return redirect()->route('master.drug.edit', $drug->id)->with('success', 'Obat berhasil dibuat');
+        } catch (\Illuminate\Validation\ValidationException $e) {
+            $allErrors = $e->errors();
+            $allAreDuplicates = true;
+            
+            foreach ($allErrors as $field => $errors) {
+                foreach ($errors as $error) {
+                    if ($error !== 'Nama obat sudah ada' && $error !== 'Kode obat sudah ada') {
+                        $allAreDuplicates = false;
+                        break 2;
+                    }
+                }
+            }
+            
+            if ($allAreDuplicates) {
+                return back()->withErrors($e->errors())->withInput();
+            }
+            return back()->with('error', 'Obat gagal dibuat')->withInput();
         } catch (\Throwable $th) {
             return redirect()->back()->with('error', 'Obat gagal dibuat');
         }
@@ -86,13 +125,55 @@ class DrugController extends Controller
     }
     public function update(Request $request, Drug $drug)
     {
-        $drug->update($request->all());
-        $repacks = $drug->repacks();
-        //melakukan update data harga terhadap semua data repack
-        foreach ($repacks as $item) {
-            $item->update_price();
+        try {
+            $validate = $request->validate([
+                'category_id' => 'required|exists:categories,id',
+                'variant_id' => 'required|exists:variants,id',
+                'manufacture_id' => 'required|exists:manufactures,id',
+                'name' => 'required|string|min:3|max:255|unique:drugs,name,' . $drug->id,
+                'code' => 'unique:drugs,code,' . $drug->id,
+                'last_price' => 'nullable|integer|min:0',
+                'last_discount' => 'nullable|integer|min:0',
+                'maximum_capacity' => 'required|integer|min:1',
+                'minimum_capacity' => 'required|integer|min:0',
+                'pack_quantity' => 'required|integer|min:1',
+                'pack_margin' => 'required|integer|min:0',
+                'piece_quantity' => 'required|integer|min:1',
+                'piece_margin' => 'required|integer|min:0',
+                'piece_netto' => 'required|integer|min:1',
+                'piece_unit' => 'required|in:ml,mg,butir'
+            ], [
+                'name.unique' => 'Nama obat sudah ada',
+                'code.unique' => 'Kode obat sudah ada'
+            ]);
+            
+            $drug->update($validate);
+            $repacks = $drug->repacks();
+            //melakukan update data harga terhadap semua data repack
+            foreach ($repacks as $item) {
+                $item->update_price();
+            }
+            return redirect()->back()->with('success', 'Berhasil mengubah data obat');
+        } catch (\Illuminate\Validation\ValidationException $e) {
+            $allErrors = $e->errors();
+            $allAreDuplicates = true;
+            
+            foreach ($allErrors as $field => $errors) {
+                foreach ($errors as $error) {
+                    if ($error !== 'Nama obat sudah ada' && $error !== 'Kode obat sudah ada') {
+                        $allAreDuplicates = false;
+                        break 2;
+                    }
+                }
+            }
+            
+            if ($allAreDuplicates) {
+                return back()->withErrors($e->errors())->withInput();
+            }
+            return back()->with('error', 'Gagal mengubah data obat')->withInput();
+        } catch (\Throwable $e) {
+            return redirect()->back()->with('error', 'Gagal mengubah data obat');
         }
-        return redirect()->back()->with('success', 'Berhasil mengubah data obat');
     }
     public function repack(Request $request, Drug $drug, Repack $repack)
     {
