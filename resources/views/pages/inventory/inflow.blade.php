@@ -190,7 +190,7 @@
                     const vendor = item.Vendor || item.vendor || '-';
                     const date = item.Date || item.date || '-';
 
-
+                // Ganti bagian ini dalam fungsi renderInflowTable()
 row.innerHTML = `
     <td class="py-3 px-6 text-center">${rowNumber}</td>
     <td class="py-3 px-6 text-center">${code}</td>

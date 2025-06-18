@@ -86,392 +86,280 @@ use Carbon\Carbon;
 
 <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
 <script>
-    // Configuration
-    const API_BASE_URL = 'https://simbat.madanateknologi.web.id/api/v1';
-    const per_page = 5;
-    const token = localStorage.getItem('token');
+    document.addEventListener('DOMContentLoaded', function () {
+        const token = window.API_TOKEN;
+        const per_page = 5;
+        let currentPage = 1;
+        let searchQuery = '';
+        let dateFrom = '';
+        let dateTo = '';
+        let drugId = null
 
-    // State variables
-    let timeout = null;
-    let selectedId;
-    let query = "";
-    let temporaryData;
-    let data_stocks = null;
-    let currentPage = 1;
-
-    // API Client
-    const api = axios.create({
-        baseURL: API_BASE_URL,
-        headers: {
-            'Authorization': `Bearer ${token}`,
-            'Content-Type': 'application/json'
-        }
-    });
-
-    // Event Listeners
-    document.addEventListener('DOMContentLoaded', initializePage);
-
-    const categoryInput = document.getElementById('bill-search')
-
-    // Initialize Page
-    function initializePage() {
         if (token) {
+            console.log('Token found:', token);
             fetchStocks();
+        } else {
+            console.error('API token not found');
         }
-    }
 
-    // API Functions
-    function fetchStocks(searchQuery = '', page = 1, dateFrom = '', dateTo = '') {
-        const params = new URLSearchParams({
-            per_page: per_page,
-            search: searchQuery,
-            page: page
-        });
+        // Event listeners
+        document.getElementById('bill-search').addEventListener('input', handleSearchInput);
+        document.querySelector('form').addEventListener('submit', handleDateFilter);
 
-        if (dateFrom) params.append('date_from', dateFrom);
-        if (dateTo) params.append('date_to', dateTo);
+        function fetchStocks(page = 1) {
+            currentPage = page;
 
-        api.get(`/reports/drugs?${params.toString()}`)
+            const params = new URLSearchParams({
+                per_page: per_page,
+                page: page,
+                search: searchQuery
+            });
+
+            if (dateFrom) params.append('date_from', dateFrom);
+            if (dateTo) params.append('date_to', dateTo);
+
+            axios.get(`/api/v1/reports/drugs?${params.toString()}`, {
+                headers: {
+                    'Authorization': `Bearer ${token}`
+                }
+            })
             .then(response => {
-                data_stocks = response.data;
-                // pagi = response.pagination;
-                renderStockTable(data_stocks);
-                // console.log('Data stok:', data_stocks.pagination);
-                updatePaginationInfo(data_stocks.pagination);
-                // updatePagination(data_stocks.data);
+                if (!response.data) {
+                    throw new Error('Empty response from server');
+                }
+                console.log('Stocks data:', response.data);
+                renderStockTable(response.data);
+                updatePaginationInfo(response.data);
             })
             .catch(error => {
-                console.error('Gagal mengambil data stok:', error);
+                console.error('Failed to fetch stocks:', error);
                 showErrorMessage('Gagal memuat data stok');
+                document.querySelector('tbody').innerHTML = '<tr><td colspan="7" class="py-4 text-center text-gray-500">Gagal memuat data</td></tr>';
+                document.getElementById('pagination-info').textContent = 'Showing 0 to 0 of 0 results';
+                document.getElementById('pagination-div').innerHTML = '';
             });
-    }
-
-    function handleDateFilter(event) {
-        event.preventDefault();
-
-        const dateFrom = dateFromInput?.value || '';
-        const dateTo = dateToInput?.value || '';
-
-        if (dateFrom && dateTo && dateFrom > dateTo) {
-            showErrorMessage('Tanggal awal tidak boleh lebih besar dari tanggal akhir');
-            return;
         }
 
-        fetchStocks(query, 1, dateFrom, dateTo);
-    }
+        window.fetchStocks = fetchStocks;
 
-    function renderStockTable(stockData) {
-        console.log('Rendering data:', stockData);
-        const tbody = document.querySelector('tbody');
-        if (!tbody) return;
+        function handleSearchInput(e) {
+            searchQuery = e.target.value;
+            clearTimeout(this.timeout);
+            this.timeout = setTimeout(() => {
+                fetchStocks(1);
+            }, 400);
+        }
 
-        // Simpan data asli untuk filter
-        globalStockData = stockData.data;
-        globalPage = stockData.pagination;
+        function handleDateFilter(e) {
+            e.preventDefault();
+            dateFrom = e.target.querySelector('input[type="date"]:first-of-type').value;
+            dateTo = e.target.querySelector('input[type="date"]:last-of-type').value;
 
-        // Render awal
-        updateTable(globalStockData, globalPage);
-        renderPagination(globalPage);
-    }
+            if (dateFrom && dateTo && dateFrom > dateTo) {
+                showErrorMessage('Tanggal awal tidak boleh lebih besar dari tanggal akhir');
+                return;
+            }
 
-    function updateTable(data, page) {
-        const tbody = document.querySelector('tbody');
-        tbody.innerHTML = '';
+            fetchStocks(1);
+        }
 
-        // Hitung data yang akan ditampilkan di halaman saat ini
-        const startIndex = (currentPage - 1) * per_page;
-        const current = (page.current_page - 1) * per_page;
-        const endIndex = startIndex + per_page;
-        const paginatedData = data.slice(startIndex, endIndex);
-        console.log('currentPage:', current);
+        function renderStockTable(responseData) {
+            const tbody = document.querySelector('tbody');
+            tbody.innerHTML = '';
 
+            if (!responseData || !responseData.data) {
+                console.error('Invalid response data:', responseData);
+                showErrorMessage('Data tidak valid diterima dari server');
+                return;
+            }
 
-        paginatedData.forEach((item, index) => {
-            const row = document.createElement('tr');
-            row.className = 'border-b border-gray-200 hover:bg-gray-100';
+            const dataItems = responseData.data;
+            const totalItems = dataItems.length;
+            const startIndex = (currentPage - 1) * per_page;
 
-            row.innerHTML = `
-                <td class="py-3">${current + index + 1}</td>
-                <td class="py-3">${item.drug_code}</td>
-                <td class="py-3">${item.drug_name}</td>
-                <td class="py-3">${item.quantity} pcs</td>
-                <td class="py-3">${item.oldest_expired}</td>
-                <td class="py-3">${item.latest_expired}</td>
-                <td class="flex justify-center py-3">
-                    <button onclick="viewStockDetail(${item.id})"
-                            class="rounded-md bg-blue-500 p-2 hover:bg-blue-600 transition-colors duration-200">
-                        <svg width="20" height="20" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg">
-                            <path d="M9.99972 2.5C14.4931 2.5 18.2314 5.73333 19.0156 10C18.2322 14.2667 14.4931 17.5 9.99972 17.5C5.50639 17.5 1.76805 14.2667 0.983887 10C1.76722 5.73333 5.50639 2.5 9.99972 2.5ZM9.99972 15.8333C11.6993 15.833 13.3484 15.2557 14.6771 14.196C16.0058 13.1363 16.9355 11.6569 17.3139 10C16.9341 8.34442 16.0038 6.86667 14.6752 5.80835C13.3466 4.75004 11.6983 4.17377 9.99972 4.17377C8.30113 4.17377 6.65279 4.75004 5.3242 5.80835C3.9956 6.86667 3.06536 8.34442 2.68555 10C3.06397 11.6569 3.99361 13.1363 5.32234 14.196C6.65106 15.2557 8.30016 15.833 9.99972 15.8333V15.8333ZM9.99972 13.75C9.00516 13.75 8.05133 13.3549 7.34807 12.6516C6.64481 11.9484 6.24972 10.9946 6.24972 10C6.24972 9.00544 6.64481 8.05161 7.34807 7.34835C8.05133 6.64509 9.00516 6.25 9.99972 6.25C10.9943 6.25 11.9481 6.64509 12.6514 7.34835C13.3546 8.05161 13.7497 9.00544 13.7497 10C13.7497 10.9946 13.3546 11.9484 12.6514 12.6516C11.9481 13.3549 10.9943 13.75 9.99972 13.75ZM9.99972 12.0833C10.5523 12.0833 11.0822 11.8638 11.4729 11.4731C11.8636 11.0824 12.0831 10.5525 12.0831 10C12.0831 9.44747 11.8636 8.91756 11.4729 8.52686C11.0822 8.13616 10.5523 7.91667 9.99972 7.91667C9.44719 7.91667 8.91728 8.13616 8.52658 8.52686C8.13588 8.91756 7.91639 9.44747 7.91639 10C7.91639 10.5525 8.13588 11.0824 8.52658 11.4731C8.91728 11.8638 9.44719 12.0833 9.99972 12.0833Z" fill="white"/>
-                        </svg>
-                    </button>
-                </td>
+            if (!Array.isArray(dataItems)) {
+                console.error('Expected array of items in response.data:', dataItems);
+                showErrorMessage('Format data tidak valid');
+                return;
+            }
+
+            dataItems.forEach((item, index) => {
+                const rowNumber = startIndex + index + 1;
+
+                const row = document.createElement('tr');
+                row.className = 'border-b border-gray-200 hover:bg-gray-100';
+
+                // Menjadi:
+row.innerHTML = `
+    <td class="py-3">${rowNumber}</td>
+    <td class="py-3">${item.drug_code || '-'}</td>
+    <td class="py-3">${item.drug_name || '-'}</td>
+    <td class="py-3">${item.quantity || 0} pcs</td>
+    <td class="py-3">${item.oldest_expired || '-'}</td>
+    <td class="py-3">${item.latest_expired || '-'}</td>
+    <td class="flex justify-center py-3">
+        <a href="/report/drug/${item.id}"
+           class="rounded-md bg-blue-500 p-2 hover:bg-blue-600 transition-colors duration-200 inline-block">
+            <svg width="20" height="20" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <path d="M9.99972 2.5C14.4931 2.5 18.2314 5.73333 19.0156 10C18.2322 14.2667 14.4931 17.5 9.99972 17.5C5.50639 17.5 1.76805 14.2667 0.983887 10C1.76722 5.73333 5.50639 2.5 9.99972 2.5ZM9.99972 15.8333C11.6993 15.833 13.3484 15.2557 14.6771 14.196C16.0058 13.1363 16.9355 11.6569 17.3139 10C16.9341 8.34442 16.0038 6.86667 14.6752 5.80835C13.3466 4.75004 11.6983 4.17377 9.99972 4.17377C8.30113 4.17377 6.65279 4.75004 5.3242 5.80835C3.9956 6.86667 3.06536 8.34442 2.68555 10C3.06397 11.6569 3.99361 13.1363 5.32234 14.196C6.65106 15.2557 8.30016 15.833 9.99972 15.8333V15.8333ZM9.99972 13.75C9.00516 13.75 8.05133 13.3549 7.34807 12.6516C6.64481 11.9484 6.24972 10.9946 6.24972 10C6.24972 9.00544 6.64481 8.05161 7.34807 7.34835C8.05133 6.64509 9.00516 6.25 9.99972 6.25C10.9943 6.25 11.9481 6.64509 12.6514 7.34835C13.3546 8.05161 13.7497 9.00544 13.7497 10C13.7497 10.9946 13.3546 11.9484 12.6514 12.6516C11.9481 13.3549 10.9943 13.75 9.99972 13.75ZM9.99972 12.0833C10.5523 12.0833 11.0822 11.8638 11.4729 11.4731C11.8636 11.0824 12.0831 10.5525 12.0831 10C12.0831 9.44747 11.8636 8.91756 11.4729 8.52686C11.0822 8.13616 10.5523 7.91667 9.99972 7.91667C9.44719 7.91667 8.91728 8.13616 8.52658 8.52686C8.13588 8.91756 7.91639 9.44747 7.91639 10C7.91639 10.5525 8.13588 11.0824 8.52658 11.4731C8.91728 11.8638 9.44719 12.0833 9.99972 12.0833Z" fill="white"/>
+            </svg>
+        </a>
+    </td>
+`;
+                tbody.appendChild(row);
+            });
+
+            renderPagination(responseData);
+        }
+
+        function updatePaginationInfo(responseData) {
+            if (!responseData) {
+                console.error('Invalid response data for pagination:', responseData);
+                return;
+            }
+
+            const start = ((currentPage - 1) * per_page) + 1;
+            const end = Math.min(currentPage * per_page, responseData.data.length);
+            const total = responseData.data.length;
+
+            document.getElementById('pagination-info').textContent =
+                `Showing ${start} to ${end} of ${total} results`;
+        }
+
+        function renderPagination(responseData) {
+            if (!responseData) return;
+
+            const totalItems = responseData.data.length;
+            const totalPages = Math.ceil(totalItems / per_page);
+
+            let paginationHTML = '<nav class="isolate inline-flex -space-x-px rounded-md shadow-xs" aria-label="Pagination">';
+
+            // Previous button
+            paginationHTML += `
+                <span onclick="${currentPage === 1 ? '' : `fetchStocks(${currentPage - 1})`}"
+                    class="relative inline-flex items-center px-4 py-2 text-sm font-medium
+                    ${currentPage === 1 ? 'text-gray-300 cursor-not-allowed' : 'text-gray-500 cursor-pointer hover:bg-gray-50'}
+                    bg-white border border-gray-300 rounded-l-md leading-5">
+                    &lsaquo;
+                </span>
             `;
 
-            tbody.appendChild(row);
-        });
-
-    }
-
-    categoryInput.addEventListener('input', function() {
-        clearTimeout(timeout);
-        const query = this.value;
-        timeout = setTimeout(() => {
-            if (query.length > 0) {
-                document.getElementById('bill-data').classList.add('hidden')
-                document.getElementById('bill-value').classList.remove('hidden')
-                fetch(`/management-search?query=${query}&variant=bill`)
-                    .then(response => response.json())
-                    .then(data => {
-                        const suggestions = document.getElementById('bill-value');
-                        suggestions.innerHTML = '';
-
-                        if (data.length > 0) {
-                            data.forEach((item, number) => {
-                                console.log(item)
-                                suggestions.innerHTML += generateTableRow(item,number)
-                            });
-                        }
-                    });
-            } else {
-                document.getElementById('bill-data').classList.remove('hidden')
-                document.getElementById('bill-value').classList.add('hidden')
+            // Page buttons
+            for (let i = 1; i <= totalPages; i++) {
+                paginationHTML += `
+                    <span onclick="fetchStocks(${i})"
+                        class="relative inline-flex items-center px-4 py-2 -ml-px text-sm font-medium
+                        ${i === currentPage ? 'bg-blue-500 text-white' : 'bg-white text-gray-700 hover:bg-gray-50'}
+                        border border-gray-300 leading-5">
+                        ${i}
+                    </span>
+                `;
             }
-        }, 400);
+
+            // Next button
+            paginationHTML += `
+                <span onclick="${currentPage === totalPages ? '' : `fetchStocks(${currentPage + 1})`}"
+                    class="relative inline-flex items-center px-4 py-2 -ml-px text-sm font-medium
+                    ${currentPage === totalPages ? 'text-gray-300 cursor-not-allowed' : 'text-gray-500 cursor-pointer hover:bg-gray-50'}
+                    bg-white border border-gray-300 rounded-r-md leading-5">
+                    &rsaquo;
+                </span>
+            `;
+
+            paginationHTML += '</nav>';
+            document.getElementById("pagination-div").innerHTML = paginationHTML;
+        }
+
+        function showErrorMessage(message) {
+            const toast = document.createElement('div');
+            toast.className = 'fixed top-4 right-4 bg-red-500 text-white px-4 py-2 rounded shadow-lg z-50';
+            toast.textContent = message;
+            document.body.appendChild(toast);
+            setTimeout(() => toast.remove(), 3000);
+        }
+
+        function showSuccessMessage(message) {
+            const toast = document.createElement('div');
+            toast.className = 'fixed top-4 right-4 bg-green-500 text-white px-4 py-2 rounded shadow-lg z-50';
+            toast.textContent = message;
+            document.body.appendChild(toast);
+            setTimeout(() => toast.remove(), 3000);
+        }
+
+        function printModal() {
+            document.getElementById('printModal').classList.remove('hidden');
+        }
+
+        function closePrintModal() {
+            document.getElementById('printModal').classList.add('hidden');
+        }
+
+        function exportToExcel() {
+            closePrintModal();
+            let exportUrl = '/export-excel';
+            const params = new URLSearchParams();
+
+            if (searchQuery) params.append('search', searchQuery);
+            if (dateFrom) params.append('date_from', dateFrom);
+            if (dateTo) params.append('date_to', dateTo);
+
+            if (params.toString()) {
+                exportUrl += '?' + params.toString();
+            }
+
+            window.location.href = exportUrl;
+            showSuccessMessage('Mengunduh file Excel...');
+        }
+
+        function exportToPDF() {
+            closePrintModal();
+            let exportUrl = '/export-pdf';
+            const params = new URLSearchParams();
+
+            if (searchQuery) params.append('search', searchQuery);
+            if (dateFrom) params.append('date_from', dateFrom);
+            if (dateTo) params.append('date_to', dateTo);
+
+            if (params.toString()) {
+                exportUrl += '?' + params.toString();
+            }
+
+            window.location.href = exportUrl;
+            showSuccessMessage('Mengunduh file PDF...');
+        }
+
+        function submitModal() {
+            exportToPDF();
+        }
+
+        // Fixed viewStockDetail function
+       // Hapus ini:
+window.viewStockDetail = function(id) {
+    window.drugId = id;
+    if (!drugId || drugId === 'undefined') {
+        console.error('Invalid drug ID:', drugId);
+        showErrorMessage('ID obat tidak valid');
+        return;
+    }
+    console.log('Navigating to drug detail with ID:', drugId);
+    window.location.href = `/report/drug/${id}`;
+};
     });
 
-    function updatePaginationInfo(data) {
-        console.log('Pagination data:', data);
-        const start = ((data.current_page - 1) * data.per_page) + 1;
-        const end = Math.min(data.current_page * data.per_page, data.total);
-        const total = data.total;
-
-        document.getElementById('pagination-info').textContent =
-            `Showing ${start} to ${end} of ${total} results`;
-    }
-
-    function renderPagination(pagination) {
-        const currentPage = pagination.current_page;
-        const lastPage = pagination.last_page;
-        // console.log('Current Page:', currentPage);
-
-        let elements = '<nav class="isolate inline-flex -space-x-px rounded-md shadow-xs" aria-label="Pagination">';
-
-        // Previous button
-        elements += `<span onclick="${currentPage === 1 ? '' : `getDataPage(${currentPage - 1})`}"
-                class="relative inline-flex items-center px-4 py-2 text-sm font-medium
-                ${currentPage === 1 ? 'text-gray-300 cursor-not-allowed' : 'text-gray-500 cursor-pointer hover:bg-gray-50'}
-                bg-white border border-gray-300 rounded-l-md leading-5 hover:text-gray-500 focus:z-10 focus:outline-none focus:ring ring-gray-300 focus:border-blue-300 active:bg-gray-100 active:text-gray-700 transition ease-in-out duration-150"
-                ${currentPage === 1 ? 'disabled aria-disabled="true"' : ''}>
-                &lsaquo;
-                </span>`;
-
-        // Tombol-tombol halaman
-        // Tampilkan maksimal 5 tombol halaman
-        let startPage = Math.max(1, currentPage - 2);
-        let endPage = Math.min(lastPage, currentPage + 2);
-
-        if (currentPage <= 3) {
-            endPage = Math.min(5, lastPage);
-        }
-
-        if (currentPage >= lastPage - 2) {
-            startPage = Math.max(1, lastPage - 4);
-        }
-
-        // Tombol pertama jika diperlukan
-        if (startPage > 1) {
-            elements += `<span onclick="getDataPage(1)" class="relative inline-flex items-center px-4 py-2 -ml-px text-sm font-medium text-gray-700 bg-white border border-gray-300 leading-5 hover:text-gray-500 focus:z-10 focus:outline-none focus:ring ring-gray-300 focus:border-blue-300 active:bg-gray-100 active:text-gray-700 transition ease-in-out duration-150">1</span>`;
-            if (startPage > 2) {
-                elements += '<span class="relative inline-flex items-center px-4 py-2 -ml-px text-sm font-medium text-gray-700 bg-white border border-gray-300 leading-5">...</span>';
-            }
-        }
-
-        // Tombol halaman
-        for (let i = startPage; i <= endPage; i++) {
-            elements += `<span onclick="getDataPage(${i})"
-                class="relative inline-flex items-center px-4 py-2 -ml-px text-sm font-medium
-                ${i === currentPage ? 'bg-blue-500 text-white' : 'bg-white text-gray-700 hover:bg-gray-50'}
-                border border-gray-300 leading-5 focus:z-10 focus:outline-none focus:ring ring-gray-300 focus:border-blue-300 active:bg-gray-100 active:text-gray-700 transition ease-in-out duration-150">
-                ${i}
-                </span>`;
-        }
-
-        // Tombol terakhir jika diperlukan
-        if (endPage < lastPage) {
-            if (endPage < lastPage - 1) {
-                elements += '<span class="relative inline-flex items-center px-4 py-2 -ml-px text-sm font-medium text-gray-700 bg-white border border-gray-300 leading-5">...</span>';
-            }
-            elements += `<span onclick="getDataPage(${lastPage})" class="relative inline-flex items-center px-4 py-2 -ml-px text-sm font-medium text-gray-700 bg-white border border-gray-300 leading-5 hover:text-gray-500 focus:z-10 focus:outline-none focus:ring ring-gray-300 focus:border-blue-300 active:bg-gray-100 active:text-gray-700 transition ease-in-out duration-150">${lastPage}</span>`;
-        }
-
-        // Next button
-        elements += `<span onclick="${currentPage === lastPage ? '' : `getDataPage(${currentPage + 1})`}"
-                class="relative inline-flex items-center px-4 py-2 -ml-px text-sm font-medium
-                ${currentPage === lastPage ? 'text-gray-300 cursor-not-allowed' : 'text-gray-500 cursor-pointer hover:bg-gray-50'}
-                bg-white border border-gray-300 rounded-r-md leading-5 hover:text-gray-500 focus:z-10 focus:outline-none focus:ring ring-gray-300 focus:border-blue-300 active:bg-gray-100 active:text-gray-700 transition ease-in-out duration-150"
-                ${currentPage === lastPage ? 'disabled aria-disabled="true"' : ''}>
-                &rsaquo;
-                </span>`;
-        elements += '</nav>';
-
-        document.getElementById("pagination-div").innerHTML = elements;
-    }
-
-    // Pagination handler
-    function getDataPage(page) {
-        if (query.length > 0) {
-            api.get(`/reports/drugs?${params.toString()}`)
-                .then(response => {
-                    temporaryData = response.data;
-                    renderStockTable(temporaryData);
-                    updatePaginationInfo(temporaryData.data);
-                });
-        } else {
-            fetchStocks('', page);
-        }
-    }
-
-    // Utility Functions
-    function formatDate(dateString) {
-        if (!dateString) return '-';
-
-        const months = [
-            'Januari', 'Februari', 'Maret', 'April', 'Mei', 'Juni',
-            'Juli', 'Agustus', 'September', 'Oktober', 'November', 'Desember'
-        ];
-
-        try {
-            const date = new Date(dateString);
-            const day = date.getDate();
-            const month = months[date.getMonth()];
-            const year = date.getFullYear();
-
-            return `${day} ${month} ${year}`;
-        } catch (error) {
-            return dateString;
-        }
-    }
-
-    function changePage(page) {
-        const dateFrom = dateFromInput?.value || '';
-        const dateTo = dateToInput?.value || '';
-
-        fetchStocks(query, page, dateFrom, dateTo);
-    }
-
-    function viewStockDetail(drugId) {
-        window.location.href = `/report/drugs/${drugId}`;
-    }
-
-    function showErrorMessage(message) {
-        // Create toast notification
-        const toast = document.createElement('div');
-        toast.className = 'fixed top-4 right-4 bg-red-500 text-white px-4 py-2 rounded shadow-lg z-50';
-        toast.textContent = message;
-
-        document.body.appendChild(toast);
-
-        setTimeout(() => {
-            toast.remove();
-        }, 3000);
-    }
-
-    function showSuccessMessage(message) {
-        // Create toast notification
-        const toast = document.createElement('div');
-        toast.className = 'fixed top-4 right-4 bg-green-500 text-white px-4 py-2 rounded shadow-lg z-50';
-        toast.textContent = message;
-
-        document.body.appendChild(toast);
-
-        setTimeout(() => {
-            toast.remove();
-        }, 3000);
-    }
-
-    // Modal Functions
-    function printModal() {
-        const modal = document.getElementById('printModal');
-        if (modal) {
-            modal.classList.remove('hidden');
-        }
-    }
-
-    function closePrintModal() {
-        const modal = document.getElementById('printModal');
-        if (modal) {
-            modal.classList.add('hidden');
-        }
-    }
-
-    function exportToExcel() {
-        closePrintModal();
-
-        const dateFrom = dateFromInput?.value || '';
-        const dateTo = dateToInput?.value || '';
-        const searchQuery = query || '';
-
-        let exportUrl = '/export-excel';
-        const params = new URLSearchParams();
-
-        if (searchQuery) params.append('search', searchQuery);
-        if (dateFrom) params.append('date_from', dateFrom);
-        if (dateTo) params.append('date_to', dateTo);
-
-        if (params.toString()) {
-            exportUrl += '?' + params.toString();
-        }
-
-        window.location.href = exportUrl;
-        showSuccessMessage('Mengunduh file Excel...');
-    }
-
-    function exportToPDF() {
-        closePrintModal();
-
-        const dateFrom = dateFromInput?.value || '';
-        const dateTo = dateToInput?.value || '';
-        const searchQuery = query || '';
-
-        let exportUrl = '/export-pdf';
-        const params = new URLSearchParams();
-
-        if (searchQuery) params.append('search', searchQuery);
-        if (dateFrom) params.append('date_from', dateFrom);
-        if (dateTo) params.append('date_to', dateTo);
-
-        if (params.toString()) {
-            exportUrl += '?' + params.toString();
-        }
-
-        window.location.href = exportUrl;
-        showSuccessMessage('Mengunduh file PDF...');
-    }
-
-    function submitModal() {
-        exportToPDF();
-    }
-
-    // Keyboard shortcuts
     document.addEventListener('keydown', function(event) {
-        // ESC key to close modal
         if (event.key === 'Escape') {
-            closePrintModal();
+            document.getElementById('printModal').classList.add('hidden');
         }
-
-        // Ctrl+P for print
         if (event.ctrlKey && event.key === 'p') {
             event.preventDefault();
-            printModal();
+            document.getElementById('printModal').classList.remove('hidden');
         }
     });
 
-    // Click outside modal to close
     document.getElementById('printModal')?.addEventListener('click', function(event) {
         if (event.target === this) {
-            closePrintModal();
+            this.classList.add('hidden');
         }
     });
-
 </script>
 @endsection

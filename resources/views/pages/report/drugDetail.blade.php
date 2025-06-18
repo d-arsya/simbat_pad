@@ -138,17 +138,17 @@
         <h2 class="text-xl font-semibold my-6">HISTORI TRANSAKSI</h2>
         <div class="flex items-center justify-between w-full my-6 mt-8">
             <form action="" method="GET" class="flex w-auto flex-row justify-between gap-3">
-                <input class="rounded-sm px-2 py-1 ring-2 ring-gray-500 focus:outline-none focus:ring-2 focus:ring-blue-500" 
+                <input class="rounded-sm px-2 py-1 ring-2 ring-gray-500 focus:outline-none focus:ring-2 focus:ring-blue-500"
                     type="date" name="start" value="{{ request('start') }}" />
                 <h1 class="text-lg font-inter text-gray-800">sampai</h1>
-                <input class="rounded-sm px-2 py-1 ring-2 ring-gray-500 focus:outline-none focus:ring-2 focus:ring-blue-500" 
+                <input class="rounded-sm px-2 py-1 ring-2 ring-gray-500 focus:outline-none focus:ring-2 focus:ring-blue-500"
                     type="date" name="end" value="{{ request('end') }}" />
                 <button class="rounded-2xl bg-blue-500 px-3 font-bold text-sm font-inter text-white hover:bg-blue-600"
                     type="submit">
                     TERAPKAN
                 </button>
                 @if(request('start') || request('end'))
-                    <a href="{{ route('report.drugs.show', $drug->id) }}" 
+                    <a href="{{ route('report.drugs.show', $drug->id) }}"
                         class="rounded-2xl bg-gray-500 px-3 font-bold text-sm font-inter text-white hover:bg-gray-600">
                         RESET
                     </a>
