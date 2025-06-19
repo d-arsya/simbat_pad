@@ -3,7 +3,7 @@
 @section('container')
     <div class="container mx-auto">
         <div class="bg-white shadow-md rounded-lg py-12 px-6">
-            <form id="edit-drug-form">
+            <form id="edit-drug-form" action="{{ route('master.drug.update', $drug->id) }}" method="POST">
                 @csrf
                 @method('PUT')
                 <div class="grid grid-cols-6 gap-6">
@@ -14,15 +14,15 @@
                         </div>
                         <div class="flex w-full mb-4">
                             <label for="category_id" name="category_id" class="w-1/4 text-gray-700">Kategori Obat</label>
-                            <h1 class="w-3/4">{{ $drug->category->name }}</h1>
+                            <h1 class="w-3/4">{{ $drug->category()->name }}</h1>
                         </div>
                         <div class="flex w-full mb-4">
                             <label for="variant_id" class="w-1/4 text-gray-700">Jenis Obat</label>
-                            <h1 class="w-3/4">{{ $drug->variant->name }}</h1>
+                            <h1 class="w-3/4">{{ $drug->variant()->name }}</h1>
                         </div>
                         <div class="flex w-full mb-4">
                             <label for="manufacture_id" class="w-1/4 text-gray-700">Produsen Obat</label>
-                            <h1 class="w-3/4">{{ $drug->manufacture->name }}</h1>
+                            <h1 class="w-3/4">{{ $drug->manufacture()->name }}</h1>
                         </div>
                         <div class="flex w-full mb-4">
                             <label for="maximum_capacity" class="w-1/4 text-gray-700">PKMa</label>
@@ -158,7 +158,7 @@
         <h2 class="text-2xl font-bold text-gray-700 mt-8">Repackaging</h2>
 
         <div class="bg-white shadow-md rounded-lg p-6 mt-4">
-            <form id="create-repack-form">
+            <form id="create-repack-form" action="{{ route('master.drug.repack.store', $drug->id) }}" method="POST">
                 @csrf
                 <div class="flex items-center mb-4 gap-3">
                     <div class="flex">
@@ -204,12 +204,17 @@
                                 </td>
                                 <td class="py-3 px-6">{{ $item->margin }}%</td>
                                 <td class="py-3 px-6">
-                                    <button onclick="deleteRepack({{ $item->id }})"
+                                    <form id="delete-repack-form-{{ $item->id }}" action="{{ route('master.drug.repack.destroy', [$drug->id, $item->id]) }}"
+                                        method="post">
+                                        @csrf
+                                        @method('DELETE')
+                                    </form>
+                                    <button onclick="showModal('delete','delete-repack-form-{{ $item->id }}')"
                                         class="bg-red-500 text-white text-sm px-2 py-2 rounded-lg shadow hover:bg-red-600 transition-colors duration-200">
                                         <svg width="20" height="21" fill="none"
                                             xmlns="http://www.w3.org/2000/svg">
                                             <path
-                                                d="M14.167 5.50002H18.3337V7.16669H16.667V18C16.667 18.221 16.5792 18.433 16.4229 18.5893C16.2666 18.7456 16.0547 18.8334 15.8337 18.8334H4.16699C3.94598 18.8334 3.73402 18.7456 3.57774 18.5893C3.42146 18.433 3.33366 18.221 3.33366 18V7.16669H1.66699V5.50002H5.83366V3.00002C5.83366 2.77901 5.92146 2.56704 6.07774 2.41076C6.23402 2.25448 6.44598 2.16669 6.66699 2.16669H13.3337C13.5547 2.16669 13.7666 2.25448 13.9229 2.41076C14.0792 2.56704 14.167 2.77901 14.167 3.00002V5.50002ZM15.0003 7.16669H5.00033V17.1667H15.0003V7.16669ZM7.50033 3.83335V5.50002H12.50033V3.83335H7.50033Z"
+                                                d="M14.167 5.50002H18.3337V7.16669H16.667V18C16.667 18.221 16.5792 18.433 16.4229 18.5893C16.2666 18.7456 16.0547 18.8334 15.8337 18.8334H4.16699C3.94598 18.8334 3.73402 18.7456 3.57774 18.5893C3.42146 18.433 3.33366 18.221 3.33366 18V7.16669H1.66699V5.50002H5.83366V3.00002C5.83366 2.77901 5.92146 2.56704 6.07774 2.41076C6.23402 2.25448 6.44598 2.16669 6.66699 2.16669H13.3337C13.5547 2.16669 13.7666 2.25448 13.9229 2.41076C14.0792 2.56704 14.167 2.77901 14.167 3.00002V5.50002ZM15.0003 7.16669H5.00033V17.1667H15.0003V7.16669ZM7.50033 3.83335V5.50002H12.5003V3.83335H7.50033Z"
                                                 fill="white" />
                                         </svg>
                                     </button>
@@ -220,91 +225,14 @@
                 </table>
             </div>
         </div>
-
-        <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
         <script>
-            document.addEventListener('DOMContentLoaded', function() {
-                const token = window.API_TOKEN;
-
-                // Edit Drug Form
-                const editDrugForm = document.getElementById('edit-drug-form');
-                if (editDrugForm) {
-                    editDrugForm.addEventListener('submit', function(e) {
-                        e.preventDefault();
-
-                        const formData = new FormData(editDrugForm);
-                        const drugId = {{ $drug->id }};
-
-                        axios.put(`/api/v1/drugs/${drugId}`, formData, {
-                            headers: {
-                                'Authorization': `Bearer ${token}`,
-                                'Content-Type': 'multipart/form-data'
-                            },
-                            params: {
-                                '_method': 'PUT'
-                            }
-                        })
-                        .then(response => {
-                            console.log('Drug updated:', response.data);
-                            alert('Data obat berhasil diperbarui');
-                            // You might want to reload the page or update the UI here
-                        })
-                        .catch(error => {
-                            console.error('Failed to update drug:', error);
-                            alert('Gagal memperbarui data obat');
-                        });
-                    });
-                }
-
-                // Create Repack Form
-                const createRepackForm = document.getElementById('create-repack-form');
-                if (createRepackForm) {
-                    createRepackForm.addEventListener('submit', function(e) {
-                        e.preventDefault();
-
-                        const formData = new FormData(createRepackForm);
-                        const drugId = {{ $drug->id }};
-
-                        axios.post(`/api/v1/drugs/${drugId}/repacks`, formData, {
-                            headers: {
-                                'Authorization': `Bearer ${token}`,
-                                'Content-Type': 'multipart/form-data'
-                            }
-                        })
-                        .then(response => {
-                            console.log('Repack created:', response.data);
-                            alert('Repack berhasil ditambahkan');
-                            window.location.reload(); // Reload to show new repack
-                        })
-                        .catch(error => {
-                            console.error('Failed to create repack:', error);
-                            alert('Gagal menambahkan repack');
-                        });
-                    });
-                }
-            });
-
-            // Delete Repack function
-            function deleteRepack(repackId) {
-                if (confirm('Apakah Anda yakin ingin menghapus repack ini?')) {
-                    const token = window.API_TOKEN;
-                    const drugId = {{ $drug->id }};
-
-                    axios.delete(`/api/v1/drugs/${drugId}/repacks/${repackId}`, {
-                        headers: {
-                            'Authorization': `Bearer ${token}`
-                        }
-                    })
-                    .then(response => {
-                        console.log('Repack deleted:', response.data);
-                        alert('Repack berhasil dihapus');
-                        window.location.reload(); // Reload to reflect changes
-                    })
-                    .catch(error => {
-                        console.error('Failed to delete repack:', error);
-                        alert('Gagal menghapus repack');
-                    });
-                }
-            }
+            document.getElementById('edit-drug-form').addEventListener('submit',function(e){
+                e.preventDefault()
+                showModal('save','edit-drug-form')
+            })
+            document.getElementById('create-repack-form').addEventListener('submit',function(e){
+                e.preventDefault()
+                showModal('save','create-repack-form')
+            })
         </script>
 @endsection

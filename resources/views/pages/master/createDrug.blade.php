@@ -1,10 +1,10 @@
-@extends('layouts.main')
+    @extends('layouts.main')
 
-@section('container')
+    @section('container')
 
-<div class="container mx-auto">
+    <div class="container mx-auto">
     <div class="p-6 bg-white rounded-lg shadow-lg">
-        <form id="create-drug-form" method="POST">
+        <form action="{{ route('master.drug.store') }}" id="create-drug-form" method="POST">
             @csrf
             <div class="grid grid-cols-6 gap-6">
                 <div class="flex flex-wrap col-span-4">
@@ -128,77 +128,15 @@
             </div>
         </form>
         <div class="mt-6 text-center">
-            <button id="submit-button" class="bg-blue-500 text-white rounded hover:bg-blue-600 px-6 py-2">Simpan</button>
+            <button form="create-drug-form" class="bg-blue-500 text-white rounded hover:bg-blue-600 px-6 py-2">Simpan</button>
         </div>
     </div>
-</div>
-
-<script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
-<script>
-    document.addEventListener('DOMContentLoaded', function() {
-        const token = window.API_TOKEN;
-        const form = document.getElementById('create-drug-form');
-        const submitButton = document.getElementById('submit-button');
-
-        if (!token) {
-            console.error('API token not found');
-            return;
-        }
-
-        submitButton.addEventListener('click', function(e) {
-            e.preventDefault();
-
-            // Collect form data
-            const formData = {
-                name: document.getElementById('name').value,
-                category_id: document.getElementById('category_id').value,
-                variant_id: document.getElementById('variant_id').value,
-                manufacture_id: document.getElementById('manufacture_id').value,
-                maximum_capacity: document.getElementById('maximum_capacity').value,
-                minimum_capacity: document.getElementById('minimum_capacity').value,
-                pack_quantity: document.getElementById('pack_quantity').value,
-                pack_margin: document.getElementById('pack_margin').value,
-                piece_quantity: document.getElementById('piece_quantity').value,
-                piece_margin: document.getElementById('piece_margin').value,
-                piece_netto: document.getElementById('piece_netto').value,
-                piece_unit: document.getElementById('piece_unit').value,
-                last_price: document.getElementById('last_price').value,
-                last_discount: document.getElementById('last_discount').value
-            };
-
-            // Send data to API
-            axios.post('/api/v1/drugs', formData, {
-                headers: {
-                    'Authorization': `Bearer ${token}`,
-                    'Content-Type': 'application/json',
-                    'Accept': 'application/json'
-                }
-            })
-            .then(response => {
-                console.log('Drug created successfully:', response.data);
-                // Show success message or redirect
-                alert('Obat berhasil dibuat!');
-                // Optionally redirect to drug list page
-                // window.location.href = "{{ route('master.drug.index') }}";
-            })
-            .catch(error => {
-                console.error('Error creating drug:', error.response);
-                if (error.response && error.response.data) {
-                    // Display validation errors if any
-                    if (error.response.data.errors) {
-                        let errorMessages = '';
-                        Object.values(error.response.data.errors).forEach(err => {
-                            errorMessages += err.join('\n') + '\n';
-                        });
-                        alert('Error:\n' + errorMessages);
-                    } else {
-                        alert('Error: ' + error.response.data.message);
-                    }
-                } else {
-                    alert('Terjadi kesalahan saat menyimpan data obat.');
-                }
-            });
-        });
-    });
-</script>
+    <script>
+        document.getElementById('create-drug-form').addEventListener('submit',function(e){
+            e.preventDefault()
+            showModal('add','create-drug-form')
+        })
+    </script>
 @endsection
+
+
